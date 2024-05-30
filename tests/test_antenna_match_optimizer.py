@@ -1,10 +1,11 @@
+import numpy as np
 import skrf as rf
 from pytest import approx
 
 import src.antenna_match_optimizer as mopt
 
 
-def make_detuned_antenna():
+def make_detuned_antenna() -> rf.Network:
     ant = rf.Network("tests/2450AT18A100.s1p")
     line = rf.DefinedGammaZ0(frequency=ant.frequency)
     # random and unscientific perturbation
@@ -17,7 +18,7 @@ def make_detuned_antenna():
     return ant_detune
 
 
-def test_optimize_returns_all_archs():
+def test_optimize_returns_all_archs() -> None:
     detuned_ant = make_detuned_antenna()
 
     optimized = mopt.optimize(ntwk=detuned_ant, frequency="2.4-2.4835GHz")
@@ -37,3 +38,39 @@ def test_optimize_returns_all_archs():
     assert optimized[3].arch == mopt.Arch.CseriesLshunt
     assert optimized[3].x[0] == approx(4.761, rel=1e-3)
     assert optimized[3].x[1] == approx(60, rel=1e-3)
+
+
+def test_closest_values_exact() -> None:
+    result = mopt.closest_values(1.001, np.array(((0.9, 0.1), (1.0, 0.1), (1.1, 0.1))))
+    np.testing.assert_array_equal(result, [(1.0, 0.1)])
+
+
+def test_closest_values() -> None:
+    result = mopt.closest_values(0.95, np.array(((0.9, 0.1), (1.0, 0.1), (1.1, 0.1))))
+    np.testing.assert_array_equal(result, [(0.9, 0.1), (1.0, 0.1)])
+
+
+def test_closest_values_one_sided() -> None:
+    result = mopt.closest_values(
+        1.0, np.array(((0.4, 0.1), (0.9, 0.1), (0.8, 0.1), (1.5, 0.1), (1.6, 0.2)))
+    )
+    np.testing.assert_array_equal(result, [(0.9, 0.1), (0.8, 0.1), (1.5, 0.1)])
+
+
+def test_expand_tolerance() -> None:
+    result = mopt.expand_tolerance((2.7, 0.2), (1.0, 0.1))
+    print(result)
+    np.testing.assert_allclose(
+        result,
+        [
+            (2.7, 1.0),
+            (2.7, 0.9),
+            (2.7, 1.1),
+            (2.5, 1.0),
+            (2.5, 0.9),
+            (2.5, 1.1),
+            (2.9, 1.0),
+            (2.9, 0.9),
+            (2.9, 1.1),
+        ],
+    )

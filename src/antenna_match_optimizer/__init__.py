@@ -1,8 +1,10 @@
+import itertools
 import warnings
 from enum import Enum, auto
 
 import numpy as np
 import skrf as rf
+from numpy.typing import NDArray
 from scipy.optimize import minimize
 
 from . import passives
@@ -20,12 +22,14 @@ class OptimizeResult:
         self.arch, self.x, self.ntwk = arch, x, ntwk
 
 
-def matching_network(arch: Arch, x: np.ndarray, ntwk: rf.Network) -> rf.Network:
+def matching_network(
+    arch: Arch, x: NDArray[np.float64], ntwk: rf.Network
+) -> rf.Network:
     L = x[0] * 1e-9
     C = x[1] * 1e-12
     line = rf.DefinedGammaZ0(frequency=ntwk.frequency)
 
-    def named(label: str, matching_ntwk: rf.Network):
+    def named(label: str, matching_ntwk: rf.Network) -> rf.Network:
         n = matching_ntwk**ntwk
         n.name = f"{label}-{ntwk.name}"
         return n
@@ -49,17 +53,19 @@ def matching_network(arch: Arch, x: np.ndarray, ntwk: rf.Network) -> rf.Network:
             )
 
 
-def matching_objective(x, arch: Arch, ntwk: rf.Network, frequency: str | None) -> float:
+def matching_objective(
+    x: NDArray[np.float64], arch: Arch, ntwk: rf.Network, frequency: str | None
+) -> float:
     matched = matching_network(arch, x, ntwk)
     if frequency:
         s_mag = matched[frequency].s_mag
     else:
         s_mag = matched.s_mag
-    reflected_power = np.sum(np.array(s_mag) ** 2.0)
+    reflected_power = np.sum(s_mag**2.0)
     return float(reflected_power)
 
 
-def optimize(ntwk: rf.Network, frequency: str | None = None):
+def optimize(ntwk: rf.Network, frequency: str | None = None) -> list[OptimizeResult]:
     # start at geometric mean
     x0 = (
         (np.max(passives.INDUCTORS[:, 0]) * np.min(passives.INDUCTORS[:, 0])) ** 0.5,
@@ -83,3 +89,30 @@ def optimize(ntwk: rf.Network, frequency: str | None = None):
         matched_ntwk = matching_network(arch, res.x, ntwk)
         results.append(OptimizeResult(arch=arch, x=res.x, ntwk=matched_ntwk))
     return results
+
+
+def closest_values(value: float, components: NDArray[np.float64]) -> list[np.float64]:
+    rel = components[:, 0] / value - 1.0
+    signs = np.sign(rel)
+    best = np.argsort(np.abs(rel))
+    result = [components[best[0]]]
+    if np.abs(rel[best[0]]) > 1e-3:
+        for i in range(1, len(rel)):
+            result.append(components[best[i]])
+            if signs[best[i]] != signs[best[0]]:
+                break
+    return result
+
+
+def expand_tolerance(
+    L: tuple[float, float], C: tuple[float, float]
+) -> list[tuple[float, float]]:
+    ls = [L[0]]
+    cs = [C[0]]
+    if L[1] > 0.0:
+        ls.append(L[0] - L[1])
+        ls.append(L[0] + L[1])
+    if C[1] > 0.0:
+        cs.append(C[0] - C[1])
+        cs.append(C[0] + C[1])
+    return list(itertools.product(ls, cs))
