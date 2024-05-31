@@ -1,8 +1,7 @@
+import antenna_match_optimizer as mopt
 import numpy as np
 import skrf as rf
 from pytest import approx
-
-import src.antenna_match_optimizer as mopt
 
 
 def make_detuned_antenna() -> rf.Network:
@@ -18,7 +17,7 @@ def make_detuned_antenna() -> rf.Network:
     return ant_detune
 
 
-def test_optimize_returns_all_archs() -> None:
+def test_optimize_returns_all_archs():
     detuned_ant = make_detuned_antenna()
 
     optimized = mopt.optimize(ntwk=detuned_ant, frequency="2.4-2.4835GHz")
@@ -40,19 +39,19 @@ def test_optimize_returns_all_archs() -> None:
     assert optimized[3].x[1] == approx(60, rel=1e-3)
 
 
-def test_closest_values_exact() -> None:
+def test_closest_values_exact():
     result = mopt.closest_values(1.001, np.array(((0.9, 0.1), (1.0, 0.1), (1.1, 0.1))))
 
     np.testing.assert_array_equal(result, [(1.0, 0.1)])
 
 
-def test_closest_values() -> None:
+def test_closest_values():
     result = mopt.closest_values(0.95, np.array(((0.9, 0.1), (1.0, 0.1), (1.1, 0.1))))
 
     np.testing.assert_array_equal(result, [(0.9, 0.1), (1.0, 0.1)])
 
 
-def test_closest_values_one_sided() -> None:
+def test_closest_values_one_sided():
     result = mopt.closest_values(
         1.0, np.array(((0.4, 0.1), (0.9, 0.1), (0.8, 0.1), (1.5, 0.1), (1.6, 0.2)))
     )
@@ -60,15 +59,16 @@ def test_closest_values_one_sided() -> None:
     np.testing.assert_array_equal(result, [(0.9, 0.1), (0.8, 0.1), (1.5, 0.1)])
 
 
-def test_closest_values_below_bound() -> None:
+def test_closest_values_below_bound():
     result = mopt.closest_values(
-        0.001, np.array(((0.4, 0.1), (0.9, 0.1), (0.8, 0.1), (1.5, 0.1), (1.6, 0.2))),
+        0.001,
+        np.array(((0.4, 0.1), (0.9, 0.1), (0.8, 0.1), (1.5, 0.1), (1.6, 0.2))),
     )
 
     np.testing.assert_array_equal(result, [(0.001, 0.0)])
 
 
-def test_closest_values_above_bound() -> None:
+def test_closest_values_above_bound():
     result = mopt.closest_values(
         3.2, np.array(((0.4, 0.1), (0.9, 0.1), (0.8, 0.1), (1.5, 0.1), (1.6, 0.2)))
     )
@@ -76,54 +76,59 @@ def test_closest_values_above_bound() -> None:
     np.testing.assert_array_equal(result, [(3.2, 0.0)])
 
 
-def test_expand_tolerance() -> None:
+def test_expand_tolerance():
     result = mopt.expand_tolerance((2.7, 0.2))
 
     np.testing.assert_allclose(result, [2.7, 2.5, 2.9])
 
-def test_component_combinations_creates_component_product() -> None:
+
+def test_component_combinations_creates_component_product():
     result = mopt.component_combinations(
         arch=mopt.Arch.LseriesCshunt,
         x=(1.2, 1.1),
-        inductors=np.array([[1.0, 0.0],
-                            [1.3, 0.0]]),
-        capacitors=np.array([[1.0, 0.0],
-                             [1.2, 0.0]])
-        )
+        inductors=np.array([[1.0, 0.0], [1.3, 0.0]]),
+        capacitors=np.array([[1.0, 0.0], [1.2, 0.0]]),
+    )
 
-    assert list(result) == approx([
-        ((mopt.Arch.LseriesCshunt, (1.3, 1.2)), (1.3, 1.2)),
-        ((mopt.Arch.LseriesCshunt, (1.3, 1.0)), (1.3, 1.0)),
-        ((mopt.Arch.LseriesCshunt, (1.0, 1.2)), (1.0, 1.2)),
-        ((mopt.Arch.LseriesCshunt, (1.0, 1.0)), (1.0, 1.0)),
-        ])
+    assert list(result) == approx(
+        [
+            ((mopt.Arch.LseriesCshunt, (1.3, 1.2)), (1.3, 1.2)),
+            ((mopt.Arch.LseriesCshunt, (1.3, 1.0)), (1.3, 1.0)),
+            ((mopt.Arch.LseriesCshunt, (1.0, 1.2)), (1.0, 1.2)),
+            ((mopt.Arch.LseriesCshunt, (1.0, 1.0)), (1.0, 1.0)),
+        ]
+    )
 
-def test_component_combinations_creates_tolerance_product() -> None:
+
+def test_component_combinations_creates_tolerance_product():
     result = mopt.component_combinations(
         arch=mopt.Arch.LseriesCshunt,
         x=(1.2, 1.1),
         inductors=np.array([[1.0, 0.1]]),
-        capacitors=np.array([[1.0, 0.1]])
-        )
+        capacitors=np.array([[1.0, 0.1]]),
+    )
 
-    assert list(result) == approx([
-        ((mopt.Arch.LseriesCshunt, (1.0, 1.0)), (1.0, 1.0)),
-        ((mopt.Arch.LseriesCshunt, (1.0, 1.0)), (1.0, 0.9)),
-        ((mopt.Arch.LseriesCshunt, (1.0, 1.0)), (1.0, 1.1)),
-        ((mopt.Arch.LseriesCshunt, (1.0, 1.0)), (0.9, 1.0)),
-        ((mopt.Arch.LseriesCshunt, (1.0, 1.0)), (0.9, 0.9)),
-        ((mopt.Arch.LseriesCshunt, (1.0, 1.0)), (0.9, 1.1)),
-        ((mopt.Arch.LseriesCshunt, (1.0, 1.0)), (1.1, 1.0)),
-        ((mopt.Arch.LseriesCshunt, (1.0, 1.0)), (1.1, 0.9)),
-        ((mopt.Arch.LseriesCshunt, (1.0, 1.0)), (1.1, 1.1)),
-        ])
+    assert list(result) == approx(
+        [
+            ((mopt.Arch.LseriesCshunt, (1.0, 1.0)), (1.0, 1.0)),
+            ((mopt.Arch.LseriesCshunt, (1.0, 1.0)), (1.0, 0.9)),
+            ((mopt.Arch.LseriesCshunt, (1.0, 1.0)), (1.0, 1.1)),
+            ((mopt.Arch.LseriesCshunt, (1.0, 1.0)), (0.9, 1.0)),
+            ((mopt.Arch.LseriesCshunt, (1.0, 1.0)), (0.9, 0.9)),
+            ((mopt.Arch.LseriesCshunt, (1.0, 1.0)), (0.9, 1.1)),
+            ((mopt.Arch.LseriesCshunt, (1.0, 1.0)), (1.1, 1.0)),
+            ((mopt.Arch.LseriesCshunt, (1.0, 1.0)), (1.1, 0.9)),
+            ((mopt.Arch.LseriesCshunt, (1.0, 1.0)), (1.1, 1.1)),
+        ]
+    )
 
 
-def test_evaluate_components() -> None:
+def test_evaluate_components():
     detuned_ant = make_detuned_antenna()
     optimized = mopt.optimize(ntwk=detuned_ant, frequency="2.4-2.4835GHz")
 
-    result = mopt.evaluate_components(detuned_ant, *optimized,
-                                      frequency="2.4-2.4835GHz")
+    result = mopt.evaluate_components(
+        detuned_ant, *optimized, frequency="2.4-2.4835GHz"
+    )
 
     assert len(result) == 15
