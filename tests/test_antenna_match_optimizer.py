@@ -68,7 +68,7 @@ def test_expand_tolerance() -> None:
 def test_component_combinations_creates_component_product() -> None:
     result = mopt.component_combinations(
         arch=mopt.Arch.LseriesCshunt,
-        x=[1.2, 1.1],
+        x=(1.2, 1.1),
         inductors=np.array([[1.0, 0.0],
                             [1.3, 0.0]]),
         capacitors=np.array([[1.0, 0.0],
@@ -85,7 +85,7 @@ def test_component_combinations_creates_component_product() -> None:
 def test_component_combinations_creates_tolerance_product() -> None:
     result = mopt.component_combinations(
         arch=mopt.Arch.LseriesCshunt,
-        x=[1.2, 1.1],
+        x=(1.2, 1.1),
         inductors=np.array([[1.0, 0.1]]),
         capacitors=np.array([[1.0, 0.1]])
         )

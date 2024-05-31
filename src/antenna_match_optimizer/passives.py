@@ -1,6 +1,12 @@
-import numpy as np
+from typing import Annotated, Literal
 
-INDUCTORS = np.array(
+import numpy as np
+from numpy.typing import NDArray
+
+Toleranced = tuple[float, float]
+ComponentList = Annotated[NDArray[np.float_], Literal["N", 2]]
+
+INDUCTORS: ComponentList = np.array(
     [
         [1.00e00, 3.00e-01],
         [1.20e00, 3.00e-01],
@@ -33,7 +39,7 @@ INDUCTORS = np.array(
     ]
 )
 
-CAPACITORS = np.array(
+CAPACITORS: ComponentList = np.array(
     [
         [2.00e-01, 1.00e-01],
         [3.00e-01, 1.00e-01],

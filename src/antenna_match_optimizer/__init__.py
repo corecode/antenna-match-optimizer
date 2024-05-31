@@ -9,6 +9,9 @@ from numpy.typing import NDArray
 from scipy.optimize import minimize
 
 from . import passives
+from .passives import ComponentList, Toleranced
+
+ArchParams = tuple[float, float]
 
 
 class Arch(Enum):
@@ -19,13 +22,11 @@ class Arch(Enum):
 
 
 class OptimizeResult:
-    def __init__(self, arch: Arch, x: list[float], ntwk: rf.Network):
+    def __init__(self, arch: Arch, x: ArchParams, ntwk: rf.Network):
         self.arch, self.x, self.ntwk = arch, x, ntwk
 
 
-def matching_network(
-    arch: Arch, x: NDArray[np.float64], ntwk: rf.Network
-) -> rf.Network:
+def matching_network(arch: Arch, x: ArchParams, ntwk: rf.Network) -> rf.Network:
     L = x[0] * 1e-9
     C = x[1] * 1e-12
     line = rf.DefinedGammaZ0(frequency=ntwk.frequency)
@@ -55,7 +56,7 @@ def matching_network(
 
 
 def matching_objective(
-    x: NDArray[np.float64], arch: Arch, ntwk: rf.Network, frequency: str | None
+    x: ArchParams, arch: Arch, ntwk: rf.Network, frequency: str | None
 ) -> float:
     matched = matching_network(arch, x, ntwk)
     if frequency:
@@ -93,7 +94,7 @@ def optimize(ntwk: rf.Network, frequency: str | None = None) -> list[OptimizeRes
 
 
 def closest_values(
-    value: float, components: NDArray[np.float64]
+    value: float, components: ComponentList
 ) -> list[tuple[float, float]]:
     rel = components[:, 0] / value - 1.0
     signs = np.sign(rel)
@@ -107,7 +108,7 @@ def closest_values(
     return result
 
 
-def expand_tolerance(val_and_tolerance: tuple[float, float]) -> list[float]:
+def expand_tolerance(val_and_tolerance: Toleranced) -> list[float]:
     val = val_and_tolerance[0]
     tolerance = val_and_tolerance[1]
     if tolerance > 0.0:
@@ -118,10 +119,10 @@ def expand_tolerance(val_and_tolerance: tuple[float, float]) -> list[float]:
 
 def component_combinations(
     arch: Arch,
-    x: list[float],
-    inductors: NDArray[np.float64] = passives.INDUCTORS,
-    capacitors: NDArray[np.float64] = passives.CAPACITORS,
-) -> Iterator[tuple[tuple[Arch, tuple[float, float]], tuple[float, float]]]:
+    x: ArchParams,
+    inductors: ComponentList = passives.INDUCTORS,
+    capacitors: ComponentList = passives.CAPACITORS,
+) -> Iterator[tuple[tuple[Arch, ArchParams], ArchParams]]:
     l_comps = closest_values(x[0], inductors)
     c_comps = closest_values(x[1], capacitors)
     for l_comp, c_comp in itertools.product(l_comps, c_comps):
