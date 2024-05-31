@@ -60,6 +60,22 @@ def test_closest_values_one_sided() -> None:
     np.testing.assert_array_equal(result, [(0.9, 0.1), (0.8, 0.1), (1.5, 0.1)])
 
 
+def test_closest_values_below_bound() -> None:
+    result = mopt.closest_values(
+        0.001, np.array(((0.4, 0.1), (0.9, 0.1), (0.8, 0.1), (1.5, 0.1), (1.6, 0.2))),
+    )
+
+    np.testing.assert_array_equal(result, [(0.001, 0.0)])
+
+
+def test_closest_values_above_bound() -> None:
+    result = mopt.closest_values(
+        3.2, np.array(((0.4, 0.1), (0.9, 0.1), (0.8, 0.1), (1.5, 0.1), (1.6, 0.2)))
+    )
+
+    np.testing.assert_array_equal(result, [(3.2, 0.0)])
+
+
 def test_expand_tolerance() -> None:
     result = mopt.expand_tolerance((2.7, 0.2))
 
@@ -101,3 +117,13 @@ def test_component_combinations_creates_tolerance_product() -> None:
         ((mopt.Arch.LseriesCshunt, (1.0, 1.0)), (1.1, 0.9)),
         ((mopt.Arch.LseriesCshunt, (1.0, 1.0)), (1.1, 1.1)),
         ])
+
+
+def test_evaluate_components() -> None:
+    detuned_ant = make_detuned_antenna()
+    optimized = mopt.optimize(ntwk=detuned_ant, frequency="2.4-2.4835GHz")
+
+    result = mopt.evaluate_components(detuned_ant, *optimized,
+                                      frequency="2.4-2.4835GHz")
+
+    assert len(result) == 15

@@ -22,7 +22,7 @@ class Arch(Enum):
 
 
 class OptimizeResult:
-    def __init__(self, arch: Arch, x: ArchParams, ntwk: rf.Network):
+    def __init__(self, arch: Arch, x: ArchParams, ntwk: rf.Network | rf.NetworkSet):
         self.arch, self.x, self.ntwk = arch, x, ntwk
 
 
@@ -96,6 +96,8 @@ def optimize(ntwk: rf.Network, frequency: str | None = None) -> list[OptimizeRes
 def closest_values(
     value: float, components: ComponentList
 ) -> list[tuple[float, float]]:
+    if np.isclose(value, 0.001) or np.isclose(value, np.max(components[:, 0]) * 2):
+        return [(value, 0.0)]
     rel = components[:, 0] / value - 1.0
     signs = np.sign(rel)
     best = np.argsort(np.abs(rel))
@@ -117,12 +119,15 @@ def expand_tolerance(val_and_tolerance: Toleranced) -> list[float]:
         return [val]
 
 
+Tag = tuple[Arch, ArchParams]
+
+
 def component_combinations(
     arch: Arch,
     x: ArchParams,
     inductors: ComponentList = passives.INDUCTORS,
     capacitors: ComponentList = passives.CAPACITORS,
-) -> Iterator[tuple[tuple[Arch, ArchParams], ArchParams]]:
+) -> Iterator[tuple[Tag, ArchParams]]:
     l_comps = closest_values(x[0], inductors)
     c_comps = closest_values(x[1], capacitors)
     for l_comp, c_comp in itertools.product(l_comps, c_comps):
@@ -130,3 +135,31 @@ def component_combinations(
         c_tols = expand_tolerance(c_comp)
         for l_val, c_val in itertools.product(l_tols, c_tols):
             yield (arch, (l_comp[0], c_comp[0])), (l_val, c_val)
+
+
+def evaluate_components(
+    ntwk: rf.Network,
+    *minima: OptimizeResult,
+    frequency: str | None = None,
+    inductors: ComponentList = passives.INDUCTORS,
+    capacitors: ComponentList = passives.CAPACITORS,
+) -> list[OptimizeResult]:
+    tasks = []
+    for minimum in minima:
+        tasks += list(
+            component_combinations(
+                minimum.arch, minimum.x, inductors=inductors, capacitors=capacitors
+            )
+        )
+
+    matched_ntwks: list[tuple[Tag, ArchParams]] = []
+    for task in tasks:
+        tag, values = task
+        matched_ntwk = matching_network(tag[0], values, ntwk)
+        matched_ntwks.append((tag, matched_ntwk))
+
+    results = []
+    for tag, ntwks in itertools.groupby(matched_ntwks, lambda n: n[0]):
+        ntwk_set = rf.NetworkSet([n for _, n in ntwks])
+        results.append(OptimizeResult(tag[0], x=tag[1], ntwk=ntwk_set))
+    return results
