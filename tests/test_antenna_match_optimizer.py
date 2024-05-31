@@ -42,11 +42,13 @@ def test_optimize_returns_all_archs() -> None:
 
 def test_closest_values_exact() -> None:
     result = mopt.closest_values(1.001, np.array(((0.9, 0.1), (1.0, 0.1), (1.1, 0.1))))
+
     np.testing.assert_array_equal(result, [(1.0, 0.1)])
 
 
 def test_closest_values() -> None:
     result = mopt.closest_values(0.95, np.array(((0.9, 0.1), (1.0, 0.1), (1.1, 0.1))))
+
     np.testing.assert_array_equal(result, [(0.9, 0.1), (1.0, 0.1)])
 
 
@@ -54,23 +56,48 @@ def test_closest_values_one_sided() -> None:
     result = mopt.closest_values(
         1.0, np.array(((0.4, 0.1), (0.9, 0.1), (0.8, 0.1), (1.5, 0.1), (1.6, 0.2)))
     )
+
     np.testing.assert_array_equal(result, [(0.9, 0.1), (0.8, 0.1), (1.5, 0.1)])
 
 
 def test_expand_tolerance() -> None:
-    result = mopt.expand_tolerance((2.7, 0.2), (1.0, 0.1))
-    print(result)
-    np.testing.assert_allclose(
-        result,
-        [
-            (2.7, 1.0),
-            (2.7, 0.9),
-            (2.7, 1.1),
-            (2.5, 1.0),
-            (2.5, 0.9),
-            (2.5, 1.1),
-            (2.9, 1.0),
-            (2.9, 0.9),
-            (2.9, 1.1),
-        ],
-    )
+    result = mopt.expand_tolerance((2.7, 0.2))
+
+    np.testing.assert_allclose(result, [2.7, 2.5, 2.9])
+
+def test_component_combinations_creates_component_product() -> None:
+    result = mopt.component_combinations(
+        arch=mopt.Arch.LseriesCshunt,
+        x=[1.2, 1.1],
+        inductors=np.array([[1.0, 0.0],
+                            [1.3, 0.0]]),
+        capacitors=np.array([[1.0, 0.0],
+                             [1.2, 0.0]])
+        )
+
+    assert list(result) == approx([
+        ((mopt.Arch.LseriesCshunt, (1.3, 1.2)), (1.3, 1.2)),
+        ((mopt.Arch.LseriesCshunt, (1.3, 1.0)), (1.3, 1.0)),
+        ((mopt.Arch.LseriesCshunt, (1.0, 1.2)), (1.0, 1.2)),
+        ((mopt.Arch.LseriesCshunt, (1.0, 1.0)), (1.0, 1.0)),
+        ])
+
+def test_component_combinations_creates_tolerance_product() -> None:
+    result = mopt.component_combinations(
+        arch=mopt.Arch.LseriesCshunt,
+        x=[1.2, 1.1],
+        inductors=np.array([[1.0, 0.1]]),
+        capacitors=np.array([[1.0, 0.1]])
+        )
+
+    assert list(result) == approx([
+        ((mopt.Arch.LseriesCshunt, (1.0, 1.0)), (1.0, 1.0)),
+        ((mopt.Arch.LseriesCshunt, (1.0, 1.0)), (1.0, 0.9)),
+        ((mopt.Arch.LseriesCshunt, (1.0, 1.0)), (1.0, 1.1)),
+        ((mopt.Arch.LseriesCshunt, (1.0, 1.0)), (0.9, 1.0)),
+        ((mopt.Arch.LseriesCshunt, (1.0, 1.0)), (0.9, 0.9)),
+        ((mopt.Arch.LseriesCshunt, (1.0, 1.0)), (0.9, 1.1)),
+        ((mopt.Arch.LseriesCshunt, (1.0, 1.0)), (1.1, 1.0)),
+        ((mopt.Arch.LseriesCshunt, (1.0, 1.0)), (1.1, 0.9)),
+        ((mopt.Arch.LseriesCshunt, (1.0, 1.0)), (1.1, 1.1)),
+        ])

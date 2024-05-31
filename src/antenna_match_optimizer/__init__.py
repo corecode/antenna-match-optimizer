@@ -1,6 +1,7 @@
 import itertools
 import warnings
 from enum import Enum, auto
+from typing import Iterator
 
 import numpy as np
 import skrf as rf
@@ -91,7 +92,9 @@ def optimize(ntwk: rf.Network, frequency: str | None = None) -> list[OptimizeRes
     return results
 
 
-def closest_values(value: float, components: NDArray[np.float64]) -> list[np.float64]:
+def closest_values(
+    value: float, components: NDArray[np.float64]
+) -> list[tuple[float, float]]:
     rel = components[:, 0] / value - 1.0
     signs = np.sign(rel)
     best = np.argsort(np.abs(rel))
@@ -104,15 +107,25 @@ def closest_values(value: float, components: NDArray[np.float64]) -> list[np.flo
     return result
 
 
-def expand_tolerance(
-    L: tuple[float, float], C: tuple[float, float]
-) -> list[tuple[float, float]]:
-    ls = [L[0]]
-    cs = [C[0]]
-    if L[1] > 0.0:
-        ls.append(L[0] - L[1])
-        ls.append(L[0] + L[1])
-    if C[1] > 0.0:
-        cs.append(C[0] - C[1])
-        cs.append(C[0] + C[1])
-    return list(itertools.product(ls, cs))
+def expand_tolerance(val_and_tolerance: tuple[float, float]) -> list[float]:
+    val = val_and_tolerance[0]
+    tolerance = val_and_tolerance[1]
+    if tolerance > 0.0:
+        return [val, val - tolerance, val + tolerance]
+    else:
+        return [val]
+
+
+def component_combinations(
+    arch: Arch,
+    x: list[float],
+    inductors: NDArray[np.float64] = passives.INDUCTORS,
+    capacitors: NDArray[np.float64] = passives.CAPACITORS,
+) -> Iterator[tuple[tuple[Arch, tuple[float, float]], tuple[float, float]]]:
+    l_comps = closest_values(x[0], inductors)
+    c_comps = closest_values(x[1], capacitors)
+    for l_comp, c_comp in itertools.product(l_comps, c_comps):
+        l_tols = expand_tolerance(l_comp)
+        c_tols = expand_tolerance(c_comp)
+        for l_val, c_val in itertools.product(l_tols, c_tols):
+            yield (arch, (l_comp[0], c_comp[0])), (l_val, c_val)
