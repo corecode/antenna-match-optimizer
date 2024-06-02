@@ -29,6 +29,8 @@ class OptimizeResult:
 def matching_network(arch: Arch, x: ArchParams, ntwk: rf.Network) -> rf.Network:
     L = x[0] * 1e-9
     C = x[1] * 1e-12
+    Lstr = f"{x[0]:.3g}nH"
+    Cstr = f"{x[1]:.3g}pF"
     line = rf.DefinedGammaZ0(frequency=ntwk.frequency)
 
     def named(label: str, matching_ntwk: rf.Network) -> rf.Network:
@@ -39,19 +41,23 @@ def matching_network(arch: Arch, x: ArchParams, ntwk: rf.Network) -> rf.Network:
     match arch:
         case Arch.LshuntCseries:
             return named(
-                f"Lshunt{L}nH-C{C}pF", line.shunt_inductor(L) ** line.capacitor(C)
+                f"Lshunt{Lstr}-C{Cstr}",
+                line.shunt_inductor(L) ** line.capacitor(C),
             )
         case Arch.CshuntLseries:
             return named(
-                f"Cshunt{C}pF-C{L}nH", line.shunt_capacitor(C) ** line.inductor(L)
+                f"Cshunt{Cstr}-L{Lstr}",
+                line.shunt_capacitor(C) ** line.inductor(L),
             )
         case Arch.LseriesCshunt:
             return named(
-                f"L{L}nH-Cshunt{C}pF", line.inductor(L) ** line.shunt_capacitor(C)
+                f"L{Lstr}-Cshunt{Cstr}",
+                line.inductor(L) ** line.shunt_capacitor(C),
             )
         case Arch.CseriesLshunt:
             return named(
-                f"C{C}pF-Cshunt{L}nH", line.capacitor(C) ** line.shunt_inductor(L)
+                f"C{Cstr}-Lshunt{Lstr}",
+                line.capacitor(C) ** line.shunt_inductor(L),
             )
 
 

@@ -14,6 +14,7 @@ def make_detuned_antenna() -> rf.Network:
         ** line.shunt_capacitor(0.5e-12)
         ** ant
     )
+    ant_detune.name = "ANT"
     return ant_detune
 
 
@@ -37,6 +38,14 @@ def test_optimize_returns_all_archs():
     assert optimized[3].arch == mopt.Arch.CseriesLshunt
     assert optimized[3].x[0] == approx(4.761, rel=1e-3)
     assert optimized[3].x[1] == approx(60, rel=1e-3)
+
+
+def test_optimize_creates_correct_name():
+    detuned_ant = make_detuned_antenna()
+
+    optimized = mopt.optimize(ntwk=detuned_ant, frequency="2.4-2.4835GHz")
+
+    assert optimized[0].ntwk.name == "Lshunt4.44nH-C12.2pF-ANT"
 
 
 def test_closest_values_exact():
