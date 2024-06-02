@@ -35,28 +35,28 @@ def matching_network(arch: Arch, x: ArchParams, ntwk: rf.Network) -> rf.Network:
 
     def named(label: str, matching_ntwk: rf.Network) -> rf.Network:
         n = matching_ntwk**ntwk
-        n.name = f"{label}-{ntwk.name}"
+        n.name = label
         return n
 
     match arch:
         case Arch.LshuntCseries:
             return named(
-                f"Lshunt{Lstr}-C{Cstr}",
+                f"{Lstr}|{Cstr}―",
                 line.shunt_inductor(L) ** line.capacitor(C),
             )
         case Arch.CshuntLseries:
             return named(
-                f"Cshunt{Cstr}-L{Lstr}",
+                f"{Cstr}|{Lstr}―",
                 line.shunt_capacitor(C) ** line.inductor(L),
             )
         case Arch.LseriesCshunt:
             return named(
-                f"L{Lstr}-Cshunt{Cstr}",
+                f"{Lstr}―{Cstr}|",
                 line.inductor(L) ** line.shunt_capacitor(C),
             )
         case Arch.CseriesLshunt:
             return named(
-                f"C{Cstr}-Lshunt{Lstr}",
+                f"{Cstr}―{Lstr}|",
                 line.capacitor(C) ** line.shunt_inductor(L),
             )
 

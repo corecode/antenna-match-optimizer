@@ -45,7 +45,8 @@ def test_optimize_creates_correct_name():
 
     optimized = mopt.optimize(ntwk=detuned_ant, frequency="2.4-2.4835GHz")
 
-    assert optimized[0].ntwk.name == "Lshunt4.44nH-C12.2pF-ANT"
+    assert "4.44nH" in optimized[0].ntwk.name
+    assert "12.2pF" in optimized[0].ntwk.name
 
 
 def test_closest_values_exact():
