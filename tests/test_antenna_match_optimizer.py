@@ -1,3 +1,4 @@
+from src.antenna_match_optimizer import evaluate_components
 import antenna_match_optimizer as mopt
 import numpy as np
 import skrf as rf
@@ -142,3 +143,15 @@ def test_evaluate_components():
     )
 
     assert len(result) == 15
+
+
+def test_best_config():
+    frequency = "2.4-2.4835GHz"
+    detuned_ant = make_detuned_antenna()
+    minima = mopt.optimize(ntwk=detuned_ant, frequency=frequency)
+    configs = mopt.evaluate_components(detuned_ant, *minima, frequency=frequency)
+
+    result = mopt.best_config(configs, frequency=frequency)
+
+    assert result.arch == mopt.Arch.LshuntCseries
+    assert result.x == (4.7, 15.0)

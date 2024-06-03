@@ -169,3 +169,9 @@ def evaluate_components(
         ntwk_set = rf.NetworkSet([n for _, n in ntwks])
         results.append(OptimizeResult(tag[0], x=tag[1], ntwk=ntwk_set))
     return results
+
+
+def best_config(configs: list[OptimizeResult], frequency: str | None) -> OptimizeResult:
+    scores = [np.sum(r.ntwk[frequency].max_s_mag.s_mag ** 2) for r in configs]
+    best = np.argmin(scores)
+    return configs[best]
