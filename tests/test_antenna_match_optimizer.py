@@ -1,4 +1,3 @@
-from src.antenna_match_optimizer import evaluate_components
 import antenna_match_optimizer as mopt
 import numpy as np
 import skrf as rf
@@ -22,7 +21,8 @@ def make_detuned_antenna() -> rf.Network:
 def test_optimize_returns_all_archs():
     detuned_ant = make_detuned_antenna()
 
-    optimized = mopt.optimize(ntwk=detuned_ant, frequency="2.4-2.4835GHz")
+    args = mopt.OptimizerArgs(ntwk=detuned_ant, frequency="2.4-2.4835GHz")
+    optimized = mopt.optimize(args)
 
     assert optimized[0].arch == mopt.Arch.LshuntCseries
     assert optimized[0].x[0] == approx(4.442, rel=1e-3)
@@ -44,7 +44,8 @@ def test_optimize_returns_all_archs():
 def test_optimize_creates_correct_name():
     detuned_ant = make_detuned_antenna()
 
-    optimized = mopt.optimize(ntwk=detuned_ant, frequency="2.4-2.4835GHz")
+    args = mopt.OptimizerArgs(ntwk=detuned_ant, frequency="2.4-2.4835GHz")
+    optimized = mopt.optimize(args)
 
     assert "4.44nH" in optimized[0].ntwk.name
     assert "12.2pF" in optimized[0].ntwk.name
@@ -136,22 +137,21 @@ def test_component_combinations_creates_tolerance_product():
 
 def test_evaluate_components():
     detuned_ant = make_detuned_antenna()
-    optimized = mopt.optimize(ntwk=detuned_ant, frequency="2.4-2.4835GHz")
+    args = mopt.OptimizerArgs(ntwk=detuned_ant, frequency="2.4-2.4835GHz")
+    optimized = mopt.optimize(args)
 
-    result = mopt.evaluate_components(
-        detuned_ant, *optimized, frequency="2.4-2.4835GHz"
-    )
+    result = mopt.evaluate_components(args, *optimized)
 
     assert len(result) == 15
 
 
 def test_best_config():
-    frequency = "2.4-2.4835GHz"
     detuned_ant = make_detuned_antenna()
-    minima = mopt.optimize(ntwk=detuned_ant, frequency=frequency)
-    configs = mopt.evaluate_components(detuned_ant, *minima, frequency=frequency)
+    args = mopt.OptimizerArgs(ntwk=detuned_ant, frequency="2.4-2.4835GHz")
+    minima = mopt.optimize(args)
+    configs = mopt.evaluate_components(args, *minima)
 
-    result = mopt.best_config(configs, frequency=frequency)
+    result = mopt.best_config(args, configs)
 
     assert result.arch == mopt.Arch.LshuntCseries
     assert result.x == (4.7, 15.0)

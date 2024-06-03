@@ -21,6 +21,16 @@ class Arch(Enum):
     CseriesLshunt = auto()
 
 
+class OptimizerArgs:
+    def __init__(self, ntwk: rf.Network, frequency: str | None = None):
+        self.ntwk = ntwk
+        self.frequency = frequency
+        if self.frequency:
+            self.bandlimited_ntwk = self.ntwk[self.frequency]
+        else:
+            self.bandlimited_ntwk = self.ntwk
+
+
 class OptimizeResult:
     def __init__(self, arch: Arch, x: ArchParams, ntwk: rf.Network | rf.NetworkSet):
         self.arch, self.x, self.ntwk = arch, x, ntwk
@@ -61,19 +71,12 @@ def matching_network(arch: Arch, x: ArchParams, ntwk: rf.Network) -> rf.Network:
             )
 
 
-def matching_objective(
-    x: ArchParams, arch: Arch, ntwk: rf.Network, frequency: str | None
-) -> float:
-    matched = matching_network(arch, x, ntwk)
-    if frequency:
-        s_mag = matched[frequency].s_mag
-    else:
-        s_mag = matched.s_mag
-    reflected_power = np.sum(s_mag**2.0)
-    return float(reflected_power)
+def matching_objective(x: ArchParams, arch: Arch, args: OptimizerArgs) -> float:
+    matched = matching_network(arch, x, args.bandlimited_ntwk)
+    return float(np.sum(matched.s_mag**2.0))
 
 
-def optimize(ntwk: rf.Network, frequency: str | None = None) -> list[OptimizeResult]:
+def optimize(args: OptimizerArgs) -> list[OptimizeResult]:
     # start at geometric mean
     x0 = (
         (np.max(passives.INDUCTORS[:, 0]) * np.min(passives.INDUCTORS[:, 0])) ** 0.5,
@@ -83,19 +86,22 @@ def optimize(ntwk: rf.Network, frequency: str | None = None) -> list[OptimizeRes
         (1e-3, 2 * np.max(passives.INDUCTORS[:, 0])),
         (1e-3, 2 * np.max(passives.CAPACITORS[:, 0])),
     )
-    results = []
-    for arch in Arch:
+
+    def optimize_arch(arch: Arch) -> OptimizeResult:
         # optimize sometimes warns if it runs over bounds
         with warnings.catch_warnings(action="ignore"):
             res = minimize(
                 matching_objective,
                 x0,
-                args=(arch, ntwk, frequency),
+                args=(arch, args),
                 method="SLSQP",
                 bounds=bounds,
             )
-        matched_ntwk = matching_network(arch, res.x, ntwk)
-        results.append(OptimizeResult(arch=arch, x=res.x, ntwk=matched_ntwk))
+        matched_ntwk = matching_network(arch, res.x, args.bandlimited_ntwk)
+        return OptimizeResult(arch=arch, x=res.x, ntwk=matched_ntwk)
+
+    results = [optimize_arch(a) for a in Arch]
+
     return results
 
 
@@ -144,9 +150,8 @@ def component_combinations(
 
 
 def evaluate_components(
-    ntwk: rf.Network,
+    args: OptimizerArgs,
     *minima: OptimizeResult,
-    frequency: str | None = None,
     inductors: ComponentList = passives.INDUCTORS,
     capacitors: ComponentList = passives.CAPACITORS,
 ) -> list[OptimizeResult]:
@@ -158,11 +163,14 @@ def evaluate_components(
             )
         )
 
-    matched_ntwks: list[tuple[Tag, ArchParams]] = []
-    for task in tasks:
-        tag, values = task
-        matched_ntwk = matching_network(tag[0], values, ntwk)
-        matched_ntwks.append((tag, matched_ntwk))
+    def make_tagged_network(
+        tagged_values: tuple[Tag, ArchParams],
+    ) -> tuple[Tag, rf.Network]:
+        tag, values = tagged_values
+        matched_ntwk = matching_network(tag[0], values, args.bandlimited_ntwk)
+        return (tag, matched_ntwk)
+
+    matched_ntwks = [make_tagged_network(t) for t in tasks]
 
     results = []
     for tag, ntwks in itertools.groupby(matched_ntwks, lambda n: n[0]):
@@ -171,7 +179,7 @@ def evaluate_components(
     return results
 
 
-def best_config(configs: list[OptimizeResult], frequency: str | None) -> OptimizeResult:
-    scores = [np.sum(r.ntwk[frequency].max_s_mag.s_mag ** 2) for r in configs]
+def best_config(args: OptimizerArgs, configs: list[OptimizeResult]) -> OptimizeResult:
+    scores = [np.sum(r.ntwk.max_s_mag.s_mag**2) for r in configs]
     best = np.argmin(scores)
     return configs[best]

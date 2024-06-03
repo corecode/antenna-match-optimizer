@@ -5,7 +5,7 @@
 groups = ["default", "dev"]
 strategy = ["cross_platform", "inherit_metadata"]
 lock_version = "4.4.1"
-content_hash = "sha256:f5eca65cb96ffcbff52367eb4148cfa6a47d9135f0a23f27d4a6a42cd27abadc"
+content_hash = "sha256:434528771a8a393970c672d68d118342720439c166798bba45b995d59c2f1ff6"
 
 [[package]]
 name = "black"
@@ -187,11 +187,22 @@ files = [
 ]
 
 [[package]]
+name = "gprof2dot"
+version = "2022.7.29"
+requires_python = ">=2.7"
+summary = "Generate a dot graph from the output of several profilers."
+groups = ["default"]
+files = [
+    {file = "gprof2dot-2022.7.29-py2.py3-none-any.whl", hash = "sha256:f165b3851d3c52ee4915eb1bd6cca571e5759823c2cd0f71a79bda93c2dc85d6"},
+    {file = "gprof2dot-2022.7.29.tar.gz", hash = "sha256:45b4d298bd36608fccf9511c3fd88a773f7a1abc04d6cd39445b11ba43133ec5"},
+]
+
+[[package]]
 name = "iniconfig"
 version = "2.0.0"
 requires_python = ">=3.7"
 summary = "brain-dead simple config-ini parsing"
-groups = ["dev"]
+groups = ["default", "dev"]
 files = [
     {file = "iniconfig-2.0.0-py3-none-any.whl", hash = "sha256:b6a85871a79d2e3b22d2d1b94ac2824226a63c6b741c88f7ae975f18b6778374"},
     {file = "iniconfig-2.0.0.tar.gz", hash = "sha256:2d91e135bf72d31a410b17c16da610a82cb55f6b0477d1a902134b24a455b8b3"},
@@ -472,7 +483,7 @@ name = "pluggy"
 version = "1.5.0"
 requires_python = ">=3.8"
 summary = "plugin and hook calling mechanisms for python"
-groups = ["dev"]
+groups = ["default", "dev"]
 files = [
     {file = "pluggy-1.5.0-py3-none-any.whl", hash = "sha256:44e1ad92c8ca002de6377e165f3e0f1be63266ab4d554740532335b9d75ea669"},
     {file = "pluggy-1.5.0.tar.gz", hash = "sha256:2cffa88e94fdc978c4c574f15f9e59b7f4201d439195c3715ca9e2486f1d0cf1"},
@@ -494,7 +505,7 @@ name = "pytest"
 version = "8.2.1"
 requires_python = ">=3.8"
 summary = "pytest: simple powerful testing with Python"
-groups = ["dev"]
+groups = ["default", "dev"]
 dependencies = [
     "colorama; sys_platform == \"win32\"",
     "iniconfig",
@@ -519,6 +530,21 @@ dependencies = [
 files = [
     {file = "pytest-cov-5.0.0.tar.gz", hash = "sha256:5837b58e9f6ebd335b0f8060eecce69b662415b16dc503883a02f45dfeb14857"},
     {file = "pytest_cov-5.0.0-py3-none-any.whl", hash = "sha256:4f0764a1219df53214206bf1feea4633c3b558a2925c8b59f144f682861ce652"},
+]
+
+[[package]]
+name = "pytest-profiling"
+version = "1.7.0"
+summary = "Profiling plugin for py.test"
+groups = ["default"]
+dependencies = [
+    "gprof2dot",
+    "pytest",
+    "six",
+]
+files = [
+    {file = "pytest-profiling-1.7.0.tar.gz", hash = "sha256:93938f147662225d2b8bd5af89587b979652426a8a6ffd7e73ec4a23e24b7f29"},
+    {file = "pytest_profiling-1.7.0-py2.py3-none-any.whl", hash = "sha256:999cc9ac94f2e528e3f5d43465da277429984a1c237ae9818f8cfd0b06acb019"},
 ]
 
 [[package]]

@@ -68,11 +68,12 @@ def optimize():
 
     base = make_detuned_antenna()
     frequency = "2.4-2.5GHz"
-    frequency = "2.4-2.4835GHz"
+    frequency = "2.401-2.481GHz"
 
-    ideal = mopt.optimize(base, frequency)
-    results = mopt.evaluate_components(base, *ideal, frequency=frequency)
-    best = mopt.best_config(results, frequency=frequency)
+    args = mopt.OptimizerArgs(ntwk=base, frequency=frequency)
+    ideal = mopt.optimize(args)
+    results = mopt.evaluate_components(args, *ideal)
+    best = mopt.best_config(args, results)
 
     plot_smith(base)
     base_smith = {"svg": plot_to_svg(), "name": base.name}

@@ -11,6 +11,7 @@ dependencies = [
     "matplotlib>=3.9.0",
     "numpy>=1.26.4",
     "schemdraw>=0.19",
+    "pytest-profiling>=1.7.0",
 ]
 requires-python = ">=3.12"
 readme = "README.md"
@@ -40,7 +41,7 @@ dev = [
 testpaths = ["tests"]
 
 [tool.mypy]
-mypy_path = "src"
+mypy_path = "src,tests,webapp"
 check_untyped_defs = true
 disallow_any_generics = true
 ignore_missing_imports = true
@@ -59,7 +60,7 @@ disallow_untyped_defs = true
 
 [tool.isort]
 profile = "black"
-src_paths = ["src", "tests"]
+src_paths = ["src", "tests", "webapp"]
 
 [tool.black]
 line-length = 88
