@@ -29,8 +29,8 @@ class OptimizeResult:
 def matching_network(arch: Arch, x: ArchParams, ntwk: rf.Network) -> rf.Network:
     L = x[0] * 1e-9
     C = x[1] * 1e-12
-    Lstr = f"{x[0]:.3g}nH"
-    Cstr = f"{x[1]:.3g}pF"
+    Lstr = f"{x[0]:#.3g}nH"
+    Cstr = f"{x[1]:#.3g}pF"
     line = rf.DefinedGammaZ0(frequency=ntwk.frequency)
 
     def named(label: str, matching_ntwk: rf.Network) -> rf.Network:

@@ -35,23 +35,22 @@ def plot_to_svg() -> str:
     return buf.getvalue().decode("utf-8")
 
 
-def plot_smith(ntwk: rf.Network) -> dict[str, str]:
-    plt.figure(figsize=(4, 4), layout="constrained")
+def plot_smith(ntwk: rf.Network) -> None:
+    plt.figure(figsize=(3.5, 2.5), layout="constrained")
     ntwk.plot_s_smith()
-    return {"svg": plot_to_svg(), "name": ntwk.name}
 
 
-def plot_vswr(ntwk: rf.Network, frequency: str | None) -> dict[str, str]:
-    plt.figure(figsize=(6, 4), layout="constrained")
+def plot_vswr(ntwk: rf.Network, frequency: str | None) -> None:
+    plt.figure(figsize=(3.5, 2.5), layout="constrained")
     ntwk.frequency.unit = "GHz"
     ntwk[frequency].plot_s_vswr()
     ax = plt.gca()
     ax.set_ylim(bottom=1.0)
-    return {"svg": plot_to_svg(), "name": ntwk.name}
 
 
-def plot_with_tolerance(ntws: rf.NetworkSet, func: str = "s_vswr", **kwargs):
+def plot_with_tolerance(ntws: rf.NetworkSet, func: str = "s_vswr", **kwargs) -> None:
     plotting_method = getattr(ntws[0], f"plot_{func}")
+    ntws[0].frequency.unit = "GHz"
     plotting_method(**kwargs)
     ax = plt.gca()
     ax.fill_between(
@@ -63,45 +62,30 @@ def plot_with_tolerance(ntws: rf.NetworkSet, func: str = "s_vswr", **kwargs):
     )
 
 
-# def plot_architectures(
-#     variations: list[mopt.OptimizeResult],
-#     frequency: str | None = None,
-#     func: str = "s_vswr",
-# ) -> dict[str, str]:
-#     plt.figure(figsize=(12, 8), layout="constrained")
-#     plt.subplots(
-#         2,
-#         2,
-#         figsize=(10, 6),
-#         sharex=True,
-#         sharey=True,
-#         gridspec_kw={"wspace": 0.02, "hspace": 0.02},
-#     )
-
-#     grouped_by_arch = itertools.groupby(variations, lambda v: v.arch)
-#     for i, (_, arch_variations) in enumerate(grouped_by_arch):
-#         ax = plt.subplot(2, 2, i + 1)
-#         # plt.xticks(rotation=45)
-#         if i < 2:
-#             ax.set_xlabel(None)
-#         for ntws in arch_variations:
-#             plot_with_tolerance(ntws[frequency], func=func)
-
-#     return {"svg": plot_to_svg()}
-
-
 @bp.route("/optimize")
 def optimize():
     matplotlib.style.use(os.path.join(os.path.dirname(__file__), "match.mplstyle"))
 
     base = make_detuned_antenna()
     frequency = "2.4-2.5GHz"
+    frequency = "2.4-2.4835GHz"
 
     ideal = mopt.optimize(base, frequency)
     results = mopt.evaluate_components(base, *ideal, frequency=frequency)
+    best = mopt.best_config(results, frequency=frequency)
 
-    base_smith = plot_smith(base)
-    base_vswr = plot_vswr(base, frequency=frequency)
+    plot_smith(base)
+    base_smith = {"svg": plot_to_svg(), "name": base.name}
+    plot_vswr(base, frequency=frequency)
+    base_vswr = {"svg": plot_to_svg(), "name": base.name}
+
+    plot_smith(best.ntwk)
+    plt.gca().get_legend().remove()
+    best_smith = {"svg": plot_to_svg(), "name": best.ntwk[0].name}
+    plt.figure(figsize=(3.5, 2.5), layout="constrained")
+    plot_with_tolerance(best.ntwk[frequency])
+    plt.gca().set_ylim(bottom=1.0)
+    best_vswr = {"svg": plot_to_svg(), "name": best.ntwk[0].name}
 
     results_vswr = plot_architectures(results, frequency, func="s_vswr")
 
@@ -109,6 +93,8 @@ def optimize():
         "optimize.html",
         base_smith=base_smith,
         base_vswr=base_vswr,
+        best_smith=best_smith,
+        best_vswr=best_vswr,
         results_vswr=results_vswr,
     )
 
@@ -122,10 +108,16 @@ def plot_architectures(
     )
 
     for arch, arch_results in itertools.groupby(results, lambda r: r.arch):
-        plt.figure(figsize=(6, 4), layout="constrained")
+        plt.figure(figsize=(5, 3.5), layout="constrained")
         for combination in arch_results:
             plot_with_tolerance(combination.ntwk[frequency], func=func)
             ax = plt.gca()
             ax.set_ylim(bottom=1.0, top=top_bound)
+        ax.legend(
+            loc="upper center",
+            bbox_to_anchor=(0.5, 1.00),
+            ncol=1,
+            fancybox=True,
+        )
         plots.append({"svg": plot_to_svg(), "name": str(arch)})
     return plots

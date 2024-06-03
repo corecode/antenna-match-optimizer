@@ -23,17 +23,35 @@
 
   <section>
     <header>
-      <h2>Optimized Performance with Components</h2>
+      <h2>Best Component Combination</h2>
     </header>
-    {% for rb in results_vswr|batch(2) %}
-      <div class="grid">
-	{% for r in rb %}
+    <div class="grid">
+      <figure>
+	{{ best_smith['svg']|safe }}
+	<figcaption>Smith chart of <em>{{ best_smith['name'] }}</em></figcaption>
+      </figure>
+      <figure>
+	{{ best_vswr['svg']|safe }}
+	<figcaption>VSWR of <em>{{ best_vswr['name'] }}</em></figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section>
+    <header>
+      <h2>All Optimized Component Configurations</h2>
+    </header>
+    {# {% for rb in results_vswr|batch(2) %} #}
+    {#   <div class="grid"> #}
+    {# 	{% for r in rb %} #}
+	{% for r in results_vswr %}
 	  <figure>
 	    {{ r['svg']|safe }}
 	    <figcaption>VSWR of <em>{{ r['name'] }}</em></figcaption>
 	  </figure>
 	{% endfor %}
-      </div>
-    {% endfor %}
+    {# 	{% endfor %} #}
+    {#   </div> #}
+    {# {% endfor %} #}
   </section>
 {% endblock %}
