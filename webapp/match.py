@@ -73,11 +73,12 @@ def optimize():
     args = mopt.OptimizerArgs(ntwk=base, frequency=frequency)
     ideal = mopt.optimize(args)
     results = mopt.evaluate_components(args, *ideal)
-    best = mopt.best_config(args, results)
+    best = mopt.expand_result(args, mopt.best_config(args, results))
 
     plot_smith(base)
     base_smith = {"svg": plot_to_svg(), "name": base.name}
     plot_vswr(base, frequency=frequency)
+    worst_vswr = plt.gca().get_ylim()[1]
     base_vswr = {"svg": plot_to_svg(), "name": base.name}
 
     plot_smith(best.ntwk)
@@ -85,7 +86,7 @@ def optimize():
     best_smith = {"svg": plot_to_svg(), "name": best.ntwk[0].name}
     plt.figure(figsize=(3.5, 2.5), layout="constrained")
     plot_with_tolerance(best.ntwk[frequency])
-    plt.gca().set_ylim(bottom=1.0)
+    plt.gca().set_ylim(bottom=1.0, top=worst_vswr)
     best_vswr = {"svg": plot_to_svg(), "name": best.ntwk[0].name}
 
     results_vswr = plot_architectures(results, frequency, func="s_vswr")

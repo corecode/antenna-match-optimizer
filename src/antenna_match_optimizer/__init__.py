@@ -46,6 +46,7 @@ def matching_network(arch: Arch, x: ArchParams, ntwk: rf.Network) -> rf.Network:
     def named(label: str, matching_ntwk: rf.Network) -> rf.Network:
         n = matching_ntwk**ntwk
         n.name = label
+        n.params = {"x": x}
         return n
 
     match arch:
@@ -183,3 +184,16 @@ def best_config(args: OptimizerArgs, configs: list[OptimizeResult]) -> OptimizeR
     scores = [np.sum(r.ntwk.max_s_mag.s_mag**2) for r in configs]
     best = np.argmin(scores)
     return configs[best]
+
+
+def expand_result(args: OptimizerArgs, result: OptimizeResult) -> OptimizeResult:
+    if isinstance(result.ntwk, rf.NetworkSet):
+        expanded_ntwk = rf.NetworkSet(
+            [
+                matching_network(result.arch, n.params["x"], args.ntwk)
+                for n in result.ntwk
+            ]
+        )
+    else:
+        expanded_ntwk = matching_network(result.arch, result.x, args.ntwk)
+    return OptimizeResult(result.arch, x=result.x, ntwk=expanded_ntwk)

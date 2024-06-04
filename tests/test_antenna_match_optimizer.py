@@ -155,3 +155,28 @@ def test_best_config():
 
     assert result.arch == mopt.Arch.LshuntCseries
     assert result.x == (4.7, 15.0)
+
+
+def test_expand_result_single():
+    detuned_ant = make_detuned_antenna()
+    args = mopt.OptimizerArgs(ntwk=detuned_ant, frequency="2.4-2.4835GHz")
+    minima = mopt.optimize(args)
+
+    result = mopt.expand_result(args, minima[0])
+
+    assert result.ntwk.frequency == detuned_ant.frequency
+    assert result.ntwk.name == minima[0].ntwk.name
+
+
+def test_expand_result_set():
+    detuned_ant = make_detuned_antenna()
+    args = mopt.OptimizerArgs(ntwk=detuned_ant, frequency="2.4-2.4835GHz")
+    minima = mopt.optimize(args)
+    configs = mopt.evaluate_components(args, minima[2])
+
+    result = mopt.expand_result(args, configs[0])
+
+    assert result.ntwk[0].frequency == detuned_ant.frequency
+    assert result.ntwk.name == configs[0].ntwk.name
+    assert result.ntwk[0].name == configs[0].ntwk[0].name
+    assert result.ntwk[0] != result.ntwk[1]
