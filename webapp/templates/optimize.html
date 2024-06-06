@@ -11,12 +11,12 @@
     </header>
     <div class="grid">
       <figure>
-	{{ base_smith['svg']|safe }}
-	<figcaption>Smith chart of <em>{{ base_smith['name'] }}</em></figcaption>
+	{{ base_smith|safe }}
+	<figcaption>Smith chart of <em>{{ base_name }}</em></figcaption>
       </figure>
       <figure>
-	{{ base_vswr['svg']|safe }}
-	<figcaption>VSWR of <em>{{ base_vswr['name'] }}</em></figcaption>
+	{{ base_vswr|safe }}
+	<figcaption>VSWR of <em>{{ base_name }}</em></figcaption>
       </figure>
     </div>
   </section>
@@ -25,33 +25,38 @@
     <header>
       <h2>Best Component Combination</h2>
     </header>
+    <div class="container" style="max-width: 50%">
+      <figure>
+	{{ best_schema|safe }}
+	<figcaption>Matching circuit for <em>{{ base_name }}</em></figcaption>
+      </figure>
+    </div>
+
     <div class="grid">
       <figure>
-	{{ best_smith['svg']|safe }}
-	<figcaption>Smith chart of <em>{{ best_smith['name'] }}</em></figcaption>
+	{{ best_smith|safe }}
+	<figcaption>Smith chart of <em>{{ best_name }} (including tolerances)</em></figcaption>
       </figure>
       <figure>
-	{{ best_vswr['svg']|safe }}
-	<figcaption>VSWR of <em>{{ best_vswr['name'] }}</em></figcaption>
+	{{ best_vswr|safe }}
+	<figcaption>VSWR of <em>{{ best_name }} (including tolerances)</em></figcaption>
       </figure>
     </div>
   </section>
 
   <section>
     <header>
-      <h2>All Optimized Component Configurations</h2>
+      <h2>Top 3 Configurations per Architecture</h2>
     </header>
-    {# {% for rb in results_vswr|batch(2) %} #}
-    {#   <div class="grid"> #}
-    {# 	{% for r in rb %} #}
-	{% for r in results_vswr %}
+    {% for rb in results_vswr|batch(2) %}
+      <div class="grid">
+	{% for r in rb %}
 	  <figure>
 	    {{ r['svg']|safe }}
 	    <figcaption>VSWR of <em>{{ r['name'] }}</em></figcaption>
 	  </figure>
 	{% endfor %}
-    {# 	{% endfor %} #}
-    {#   </div> #}
-    {# {% endfor %} #}
+      </div>
+    {% endfor %}
   </section>
 {% endblock %}

@@ -177,13 +177,7 @@ def evaluate_components(
     for tag, ntwks in itertools.groupby(matched_ntwks, lambda n: n[0]):
         ntwk_set = rf.NetworkSet([n for _, n in ntwks])
         results.append(OptimizeResult(tag[0], x=tag[1], ntwk=ntwk_set))
-    return results
-
-
-def best_config(args: OptimizerArgs, configs: list[OptimizeResult]) -> OptimizeResult:
-    scores = [np.sum(r.ntwk.max_s_mag.s_mag**2) for r in configs]
-    best = np.argmin(scores)
-    return configs[best]
+    return sorted(results, key=lambda r: np.sum(r.ntwk.max_s_mag.s_mag**2))
 
 
 def expand_result(args: OptimizerArgs, result: OptimizeResult) -> OptimizeResult:

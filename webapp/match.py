@@ -1,11 +1,15 @@
 import io
 import itertools
+import math
 import os
+import re
 
 import antenna_match_optimizer as mopt
 import matplotlib.pyplot as plt
 import matplotlib.style
 import numpy as np
+import schemdraw
+import schemdraw.elements as elm
 import skrf as rf
 from flask import (
     Blueprint,
@@ -32,12 +36,16 @@ def make_detuned_antenna() -> rf.Network:
 def plot_to_svg() -> str:
     buf = io.BytesIO()
     plt.savefig(buf, format="svg")
-    return buf.getvalue().decode("utf-8")
+    str = buf.getvalue().decode("utf-8")
+    str = re.sub(r'(<svg [^>]*?) width="[^"]+" height="[^"]+"', r"\1", str)
+    return str
 
 
-def plot_smith(ntwk: rf.Network) -> None:
+def plot_smith(ntwk: rf.Network, frequency: str) -> None:
     plt.figure(figsize=(3.5, 2.5), layout="constrained")
-    ntwk.plot_s_smith()
+    ntwk.plot_s_smith(label=None)
+    plt.gca().set_prop_cycle(matplotlib.rcParams["axes.prop_cycle"])
+    ntwk[frequency].plot_s_smith(linewidth=3)
 
 
 def plot_vswr(ntwk: rf.Network, frequency: str | None) -> None:
@@ -73,36 +81,49 @@ def optimize():
     args = mopt.OptimizerArgs(ntwk=base, frequency=frequency)
     ideal = mopt.optimize(args)
     results = mopt.evaluate_components(args, *ideal)
-    best = mopt.expand_result(args, mopt.best_config(args, results))
+    best = mopt.expand_result(args, results[0])
 
-    plot_smith(base)
-    base_smith = {"svg": plot_to_svg(), "name": base.name}
+    plot_smith(base, frequency=frequency)
+    base_smith = plot_to_svg()
     plot_vswr(base, frequency=frequency)
     worst_vswr = plt.gca().get_ylim()[1]
-    base_vswr = {"svg": plot_to_svg(), "name": base.name}
+    base_vswr = plot_to_svg()
 
-    plot_smith(best.ntwk)
+    plot_smith(best.ntwk, frequency=frequency)
     plt.gca().get_legend().remove()
-    best_smith = {"svg": plot_to_svg(), "name": best.ntwk[0].name}
+    best_smith = plot_to_svg()
     plt.figure(figsize=(3.5, 2.5), layout="constrained")
     plot_with_tolerance(best.ntwk[frequency])
     plt.gca().set_ylim(bottom=1.0, top=worst_vswr)
-    best_vswr = {"svg": plot_to_svg(), "name": best.ntwk[0].name}
+    best_vswr = plot_to_svg()
 
-    results_vswr = plot_architectures(results, frequency, func="s_vswr")
+    best_schema = plot_schematic(best, antenna_name=base.name)
+
+    results_vswr = plot_architectures(
+        sorted(results, key=lambda r: r.arch.value),
+        frequency,
+        func="s_vswr",
+        arch_limit=3,
+    )
 
     return render_template(
         "optimize.html",
+        base_name=base.name,
         base_smith=base_smith,
         base_vswr=base_vswr,
+        best_name=best.ntwk[0].name,
         best_smith=best_smith,
         best_vswr=best_vswr,
+        best_schema=best_schema,
         results_vswr=results_vswr,
     )
 
 
 def plot_architectures(
-    results: list[mopt.OptimizeResult], frequency: str | None, func: str
+    results: list[mopt.OptimizeResult],
+    frequency: str | None,
+    func: str,
+    arch_limit: int,
 ):
     plots = []
     top_bound = np.max(
@@ -110,7 +131,9 @@ def plot_architectures(
     )
 
     for arch, arch_results in itertools.groupby(results, lambda r: r.arch):
-        plt.figure(figsize=(5, 3.5), layout="constrained")
+        if arch_limit > 0:
+            arch_results = itertools.islice(arch_results, arch_limit)
+        plt.figure(figsize=(3.5, 2.5), layout="constrained")
         for combination in arch_results:
             plot_with_tolerance(combination.ntwk[frequency], func=func)
             ax = plt.gca()
@@ -123,3 +146,70 @@ def plot_architectures(
         )
         plots.append({"svg": plot_to_svg(), "name": str(arch)})
     return plots
+
+
+def plot_schematic(config: mopt.OptimizeResult, antenna_name: str = "") -> str:
+    def pretty_value(value):
+        if value < 10.0:
+            val_str = f"{value:.1f}"
+        else:
+            val_str = f"{value:.0f}"
+
+        if not math.isclose(value, float(val_str)):
+            val_str = f"{value:#.3g}"
+
+        return val_str
+
+    text_offsets = {False: (0, 0.2), True: (-0.1, -0.1)}
+
+    def make_ind(vertical=False):
+        return elm.Inductor2(loops=2).label(
+            f"{pretty_value(config.x[0])}nH", ofst=text_offsets[vertical]
+        )
+
+    def make_cap(vertical=False):
+        return elm.Capacitor().label(
+            f"{pretty_value(config.x[1])}pF", ofst=text_offsets[vertical]
+        )
+
+    with schemdraw.Drawing(show=False) as d:
+        d.config(unit=2)
+
+        elm.Tag().left()
+
+        match config.arch:
+            case mopt.Arch.CseriesLshunt:
+                make_cap()
+            case mopt.Arch.LseriesCshunt:
+                make_ind()
+            case _:
+                elm.Line()
+
+        elm.Dot()
+        d.push()
+
+        match config.arch:
+            case mopt.Arch.LshuntCseries | mopt.Arch.CseriesLshunt:
+                make_ind(True).down()
+            case mopt.Arch.CshuntLseries | mopt.Arch.LseriesCshunt:
+                make_cap(True).down()
+
+        elm.Ground()
+        d.pop()
+
+        match config.arch:
+            case mopt.Arch.LshuntCseries:
+                make_cap()
+            case mopt.Arch.CshuntLseries:
+                make_ind()
+            case _:
+                elm.Line()
+
+        elm.Antenna().label(antenna_name, ofst=text_offsets[False])
+
+    svg_str: str
+    svg_str = d.get_imagedata("svg").decode("utf-8")
+    svg_str = re.sub('"sans"', '"sans-serif"', svg_str)
+    svg_str = re.sub(r'(<svg [^>]*?) height="[^"]+" width="[^"]+"', r"\1", svg_str)
+
+    return svg_str

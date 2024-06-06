@@ -1,3 +1,5 @@
+import itertools
+
 import antenna_match_optimizer as mopt
 import numpy as np
 import skrf as rf
@@ -135,7 +137,7 @@ def test_component_combinations_creates_tolerance_product():
     )
 
 
-def test_evaluate_components():
+def test_evaluate_components_unlimited():
     detuned_ant = make_detuned_antenna()
     args = mopt.OptimizerArgs(ntwk=detuned_ant, frequency="2.4-2.4835GHz")
     optimized = mopt.optimize(args)
@@ -145,16 +147,17 @@ def test_evaluate_components():
     assert len(result) == 15
 
 
-def test_best_config():
+def test_evaluate_components_is_sorted():
     detuned_ant = make_detuned_antenna()
     args = mopt.OptimizerArgs(ntwk=detuned_ant, frequency="2.4-2.4835GHz")
     minima = mopt.optimize(args)
     configs = mopt.evaluate_components(args, *minima)
 
-    result = mopt.best_config(args, configs)
+    for a, b in itertools.pairwise(configs):
+        assert np.sum(a.ntwk.max_s_mag.s_mag**2) < np.sum(b.ntwk.max_s_mag.s_mag**2)
 
-    assert result.arch == mopt.Arch.LshuntCseries
-    assert result.x == (4.7, 15.0)
+    assert configs[0].arch == mopt.Arch.LshuntCseries
+    assert configs[0].x == (4.7, 15.0)
 
 
 def test_expand_result_single():
