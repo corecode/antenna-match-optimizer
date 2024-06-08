@@ -1,1 +1,76 @@
-<h1>hi</h1>
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Impedance Optimization{% endblock %}</h1>
+{% endblock header %}
+
+{% block content %}
+  <section>
+    <p>
+      This page computes an optimal impedance matching network with L
+      topology.  It first calculates ideal values for inductor and
+      capacitor and then selects the optimal real component values,
+      taking tolerances into consideration.  Currently it uses parts
+      from the Johanson
+      S402DS <a href="https://www.johansontechnology.com/capacitor-kits">Capacitor
+      Kit</a> and the
+      L402DC <a href="https://www.johansontechnology.com/inductor-kits">Inductor
+      Kit</a>.
+      Target impedance is 50Ω.
+    </p>
+  </section>
+
+  <section>
+    <header>
+      <h2>Upload S-Parameter File</h2>
+    </header>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+	<article>
+	  <header class="error">A processing error occurred.</header>
+	  <ul>
+	    {% for message in messages %}
+	      <li>{{ message }}</li>
+	    {% endfor %}
+	  </ul>
+	</article>
+      {% endif %}
+    {% endwith %}
+
+    <form
+      method="post"
+      enctype="multipart/form-data"
+      onsubmit="this.querySelector('input[type=submit]').disabled = true"
+      >
+      <fieldset class="grid">
+	<label>
+	  Select an S-Parameter File
+	  <input
+	    type="file"
+	    name="touchstone"
+	    accept=".s1p"
+	    required
+	    />
+	</label>
+	<label>
+	  Frequency range to optimize
+	  <input
+	    type="text"
+	    name="frequency"
+	    list="frequency-options"
+	    placeholder="Select or enter frequency range"
+	    required
+	    />
+	  <datalist id="frequency-options">
+	    <option selected value="2.401-2.481GHz">Bluetooth Low Energy</option>
+	  </datalist>
+	</label>
+      </fieldset>
+      <input
+	type="submit"
+	value="Upload and Compute"
+	/>
+    </form>
+  </section>
+{% endblock content %}

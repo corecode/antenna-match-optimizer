@@ -1,5 +1,16 @@
+.error {
+    background-color: rgb(245, 183, 168);
+    color: color:var(--pico-color-dark);
+}
+
 .container > figure, .grid > figure {
     text-align: center;
+}
+
+.flex {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
 }
 
 @media print {
@@ -25,5 +36,9 @@
 
     figure {
 	break-inside: avoid;
+    }
+
+    body .noprint {
+	display: none;
     }
 }

@@ -5,30 +5,30 @@ import matplotlib.style
 import schemdraw
 import schemdraw.elements as elm
 import skrf as rf
+from matplotlib.figure import Figure
 
 import antenna_match_optimizer as mopt
 
 
-def plot_smith(ntwk: rf.Network, frequency: str) -> None:
-    plt.figure(figsize=(3.5, 2.5), layout="constrained")
-    ntwk.plot_s_smith(label=None)
-    plt.gca().set_prop_cycle(matplotlib.rcParams["axes.prop_cycle"])
-    ntwk[frequency].plot_s_smith(linewidth=3)
+def plot_smith(ntwk: rf.Network, frequency: str) -> Figure:
+    fig, ax = plt.subplots(figsize=(3.5, 2.5), layout="constrained")
+    ntwk.plot_s_smith(label=None, ax=ax)
+    ax.set_prop_cycle(matplotlib.rcParams["axes.prop_cycle"])
+    ntwk[frequency].plot_s_smith(linewidth=3, ax=ax)
+    return fig
 
 
-def plot_vswr(ntwk: rf.Network, frequency: str | None) -> None:
-    plt.figure(figsize=(3.5, 2.5), layout="constrained")
-    ntwk.frequency.unit = "GHz"
-    ntwk[frequency].plot_s_vswr()
-    ax = plt.gca()
+def plot_vswr(ntwk: rf.Network, frequency: str | None) -> Figure:
+    fig, ax = plt.subplots(figsize=(3.5, 2.5), layout="constrained")
+    ntwk[frequency].plot_s_vswr(ax=ax)
     ax.set_ylim(bottom=1.0)
+    return fig
 
 
 def plot_with_tolerance(ntws: rf.NetworkSet, func: str = "s_vswr", **kwargs) -> None:
     plotting_method = getattr(ntws[0], f"plot_{func}")
-    ntws[0].frequency.unit = "GHz"
     plotting_method(**kwargs)
-    ax = plt.gca()
+    ax = kwargs.get("ax", plt.gca())
     ax.fill_between(
         ntws[0].frequency.f,
         getattr(ntws, f"min_{func}").s_re[:, 0, 0],

@@ -1,11 +1,10 @@
 import os
+import secrets
 
 from flask import Flask
 
 
 def create_app() -> Flask:
-    app = Flask(__name__)
-
     import matplotlib
     import matplotlib.style
 
@@ -15,6 +14,10 @@ def create_app() -> Flask:
     import schemdraw
 
     schemdraw.use("svg")
+
+    app = Flask(__name__)
+    app.config["MAX_CONTENT_LENGTH"] = 16 * 1000 * 1000
+    app.secret_key = secrets.token_hex(32)
 
     from . import match
 
