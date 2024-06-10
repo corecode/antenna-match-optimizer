@@ -1,6 +1,7 @@
 import io
 import itertools
 import re
+from http import HTTPStatus
 from pathlib import PurePath
 
 import antenna_match_optimizer as mopt
@@ -14,6 +15,7 @@ from flask import (
     redirect,
     render_template,
     request,
+    url_for,
 )
 from matplotlib.figure import Figure
 
@@ -21,6 +23,10 @@ bp = Blueprint("match", __name__, url_prefix="/")
 
 
 @bp.route("/")
+def index():
+    return redirect(url_for(".upload"), code=HTTPStatus.PERMANENT_REDIRECT)
+
+
 @bp.route("/optimize", methods=["GET"])
 def upload():
     return render_template(
@@ -34,7 +40,7 @@ def optimize():
         touchstone = request.files["touchstone"]
     except Exception:
         flash("No Touchstone file uploaded")
-        return redirect(request.url, code=303)
+        return redirect(request.url, code=HTTPStatus.SEE_OTHER)
 
     touchstone_name = PurePath(touchstone.filename or "Noname")
     touchstone_data = touchstone.read().decode("utf-8")
@@ -49,18 +55,18 @@ def optimize():
         )
     except Exception:
         flash("Could not parse Touchstone file")
-        return redirect(request.url, code=303)
+        return redirect(request.url, code=HTTPStatus.SEE_OTHER)
 
     frequency = request.form.get("frequency")
     if frequency is None or frequency == "":
         flash("You need to specify a frequency range")
-        return redirect(request.url, code=303)
+        return redirect(request.url, code=HTTPStatus.SEE_OTHER)
 
     try:
         args = mopt.OptimizerArgs(ntwk=base, frequency=frequency)
     except Exception:
         flash("Frequency range is invalid")
-        return redirect(request.url, code=303)
+        return redirect(request.url, code=HTTPStatus.SEE_OTHER)
 
     ideal = mopt.optimize(args)
     results = mopt.evaluate_components(args, *ideal)
