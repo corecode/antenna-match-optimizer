@@ -38,20 +38,21 @@ def plot_with_tolerance(ntws: rf.NetworkSet, func: str = "s_vswr", **kwargs) -> 
     )
 
 
+def pretty_value(value: float) -> str:
+    if value < 10.0:
+        val_str = f"{value:.1f}"
+    else:
+        val_str = f"{value:.0f}"
+
+    if not math.isclose(value, float(val_str)):
+        val_str = f"{value:#.3g}"
+
+    return val_str
+
+
 def plot_schematic(
     config: mopt.OptimizeResult, antenna_name: str = ""
 ) -> schemdraw.Drawing:
-    def pretty_value(value):
-        if value < 10.0:
-            val_str = f"{value:.1f}"
-        else:
-            val_str = f"{value:.0f}"
-
-        if not math.isclose(value, float(val_str)):
-            val_str = f"{value:#.3g}"
-
-        return val_str
-
     text_offsets = {False: (0, 0.2), True: (-0.1, -0.1)}
 
     def make_ind(vertical=False):
