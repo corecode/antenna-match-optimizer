@@ -1,0 +1,22 @@
+name: CI
+
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup PDM
+      uses: pdm-project/setup-pdm@v4
+      with:
+        cache: true
+    - name: Install dependencies
+      run: pdm install
+    - name: Run pytest
+      run: pdm run pytest
+    - name: Lint with Ruff
+      run: pdm run ruff check --output-format=github .
+      continue-on-error: true
+    - name: Run mypy
+      run: pdm run mypy src tests webapp
