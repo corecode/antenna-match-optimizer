@@ -1,17 +1,20 @@
 {% extends 'base.html' %}
 
 {% block header %}
-  <h1>{% block title %}Impedance Optimization Results{% endblock %}</h1>
+  <div class="flex">
+    <hgroup>
+      <h1>{% block title %}Impedance Optimization Results{% endblock %}</h1>
+      <p>
+	Optimization of <em>{{ base_name }}</em> in frequency range {{ frequency }}
+      </p>
+    </hgroup>
+    <div>
+      <a href="" role="button" class="secondary noprint">Start Over</a>
+    </div>
+  </div>
 {% endblock %}
 
 {% block content %}
-  <section class="flex">
-    <p>
-      Optimization of <em>{{ base_name }}</em> in frequency range {{ frequency }}.
-    </p>
-    <a href="" role="button" class="secondary noprint">Start Over</a>
-  </section>
-
   <section>
     <header>
       <h2>Initial Performance</h2>
