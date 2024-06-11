@@ -1,20 +1,19 @@
 <!doctype html>
 <html class="no-js" lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="color-scheme" content="light dark" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
     <title>{% block title %}{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='pico.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <meta name="description" content="Impedance Matching Optimizer.
-				      Upload a S-Parameter Touchstone
-				      file and receive values for an
-				      LC-Network to minimize reflections.">
+    <link rel="stylesheet" href="{{ url_for('static', filename='pico.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+    <meta name="description" content=
+	  "Impedance Matching Optimizer.
+	  Upload a S-Parameter Touchstone
+	  file and receive values for an
+	  LC-Network to minimize reflections." />
 
-    {# <link rel="icon" href="/favicon.ico" sizes="any"> #}
-    {# <link rel="icon" href="/icon.svg" type="image/svg+xml"> #}
-    {# <link rel="apple-touch-icon" href="icon.png"> #}
+    <link rel="icon" href="{{ url_for('static', filename='logo.svg')}}" />
   </head>
 
   <body>
