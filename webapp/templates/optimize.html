@@ -1,9 +1,11 @@
 {% extends 'base.html' %}
 
+{% block title %}Impedance Optimization Results for {{ base_name }} {{frequency }}{% endblock %}
+
 {% block header %}
   <div class="flex">
     <hgroup>
-      <h1>{% block title %}Impedance Optimization Results{% endblock %}</h1>
+      <h1>Impedance Optimization Results</h1>
       <p>
 	Optimization of <em>{{ base_name }}</em> in frequency range {{ frequency }}
       </p>
@@ -35,9 +37,12 @@
     <header>
       <h2>Best Component Combination</h2>
     </header>
-    <div class="container" style="max-width: 50%">
+
+    <div class="container">
       <figure>
-	{{ best_schema|safe }}
+	<div class="container" style="max-width: 35%">
+	  {{ best_schema|safe }}
+	</div>
 	<figcaption>Matching circuit for <em>{{ base_name }}</em></figcaption>
       </figure>
     </div>

@@ -1,5 +1,5 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-theme="light">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -18,15 +18,26 @@
 
   <body>
 
-    {% include "view-source-on-github.html" %}
-
     <header class="container">
+      <div class="noprint">
+	{% include "view-source-on-github.html" %}
+      </div>
+
       {% block header %}{% endblock %}
     </header>
+
+    <table class="paged"><tfoot><tr><td>&nbsp;</td></tr></tfoot> <tbody><tr><td>
+
     <main class="container">
       {% block content %}{% endblock %}
     </main>
 
-</body>
+    </td></tr></tbody></table>
+
+    <footer class="printonly">
+      <img src="{{ url_for('static', filename='logo.svg') }}" class="logo" />
+      Impedance Matching Optimizer — {{ url_for('.index', _external=True) }}
+    </footer>
+  </body>
 
 </html>

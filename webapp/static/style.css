@@ -13,13 +13,31 @@
     justify-content: space-between;
 }
 
+.logo {
+    height: 1.2em;
+    margin-right: 0.5em;
+}
+
+@media not print {
+    .printonly {
+	display: none;
+    }
+}
+
+.paged th,
+.paged td {
+    padding: 0;
+    border: 0;
+}
+
+
 @media print {
     @page {
 	size: A4;
 	margin-left: 19mm;
 	margin-right: 13mm;
 	margin-top: 19mm;
-	margin-bottom: 19mm;
+	margin-bottom: calc(19mm - 2em);
     }
 
     .grid {
@@ -38,7 +56,28 @@
 	break-inside: avoid;
     }
 
+    body > header {
+	padding-block: 0;
+    }
+
     body .noprint {
 	display: none;
+    }
+
+    .paged tfoot th,
+    .paged tfoot td {
+	padding: 0;
+	border: 0;
+	height: 2em;
+    }
+
+    footer.printonly {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	position: fixed;
+	padding-block: 0;
+	bottom: 0;
+	width: 100%;
     }
 }
