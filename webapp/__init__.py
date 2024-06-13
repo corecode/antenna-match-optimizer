@@ -2,6 +2,7 @@ import os
 import secrets
 
 from flask import Flask
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 
 def create_app() -> Flask:
@@ -24,3 +25,8 @@ def create_app() -> Flask:
     app.register_blueprint(match.bp)
 
     return app
+
+
+def create_proxied_app() -> ProxyFix:
+    app = create_app()
+    return ProxyFix(app, x_for=1, x_proto=1, x_host=1, x_port=1, x_prefix=1)
