@@ -17,5 +17,5 @@ COPY --from=builder /project/.venv/ /project/.venv
 ENV PATH="/project/.venv/bin:$PATH"
 COPY webapp /project/webapp
 WORKDIR /project
-ENV APP="webapp:create_app()"
-ENTRYPOINT gunicorn --bind 0.0.0.0:8000 ${APP}
+ENTRYPOINT ["gunicorn", "--bind", "0.0.0.0:8000"]
+CMD ["webapp:create_app()"]
