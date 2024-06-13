@@ -27,6 +27,9 @@ def create_app() -> Flask:
     return app
 
 
-def create_proxied_app() -> ProxyFix:
+def create_proxied_app() -> Flask:
     app = create_app()
-    return ProxyFix(app, x_for=1, x_proto=1, x_host=1, x_port=1, x_prefix=1)
+    app.wsgi_app = ProxyFix(  # type: ignore[method-assign]
+        app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1, x_prefix=1
+    )
+    return app
