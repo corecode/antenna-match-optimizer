@@ -16,5 +16,6 @@ FROM python:$PYTHON_BASE
 COPY --from=builder /project/.venv/ /project/.venv
 ENV PATH="/project/.venv/bin:$PATH"
 COPY webapp /project/webapp
+COPY gunicorn.conf.py /project
 WORKDIR /project
 ENTRYPOINT ["gunicorn"]
