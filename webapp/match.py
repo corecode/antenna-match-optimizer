@@ -8,6 +8,8 @@ import antenna_match_optimizer as mopt
 import antenna_match_optimizer.plotting as mplt
 import matplotlib.pyplot as plt
 import numpy as np
+import schemdraw
+import schemdraw.elements as elm
 import skrf as rf
 from flask import (
     Blueprint,
@@ -29,8 +31,10 @@ def index():
 
 @bp.route("/optimize", methods=["GET"])
 def upload():
+    pi_network = save_schematic(plot_pi_schematic())
     return render_template(
         "upload.html",
+        pi_network=pi_network,
     )
 
 
@@ -88,7 +92,7 @@ def optimize():
     ax.set_ylim(bottom=1.0, top=worst_vswr)
     best_vswr = plot_to_svg(best_vswr_fig)
 
-    best_schema = plot_schematic(best, base.name)
+    best_schema = save_schematic(mplt.plot_schematic(best, antenna_name=base.name))
 
     results_vswr = plot_architectures(
         sorted(results, key=lambda r: r.arch.value),
@@ -159,12 +163,33 @@ def plot_architectures(
     return plots
 
 
-def plot_schematic(ntwk: mopt.OptimizeResult, name: str):
-    schema = mplt.plot_schematic(ntwk, antenna_name=name)
-
+def save_schematic(schema: schemdraw.Drawing) -> str:
     svg_str: str
     svg_str = schema.get_imagedata("svg").decode("utf-8")
     svg_str = re.sub('"sans"', '"sans-serif"', svg_str)
     svg_str = re.sub(r'(<svg [^>]*?) height="[^"]+" width="[^"]+"', r"\1", svg_str)
 
     return svg_str
+
+
+def plot_pi_schematic() -> schemdraw.Drawing:
+    d: schemdraw.Drawing
+    with schemdraw.Drawing(show=False) as d:
+        d.config(unit=2)
+
+        elm.cables.Coax(length=2.5).right()
+        elm.Dot()
+        d.push()
+        elm.RBox().down()
+        elm.Ground(lead=False)
+        d.pop()
+        elm.RBox()
+        elm.Dot()
+        d.push()
+        elm.RBox().down()
+        elm.Ground(lead=False)
+        d.pop()
+        elm.Line(unit=0.5)
+        elm.Antenna()
+
+    return d

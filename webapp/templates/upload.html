@@ -1,28 +1,51 @@
 {% extends 'base.html' %}
 
 {% block header %}
-  <h1>{% block title %}Impedance Optimization{% endblock %}</h1>
+  <h1>{% block title %}Antenna Match Optimizer{% endblock %}</h1>
 {% endblock header %}
 
 {% block content %}
   <section>
     <p>
-      This page computes an optimal impedance matching network with L
-      topology.  It first calculates ideal values for inductor and
-      capacitor and then selects the optimal real component values,
-      taking tolerances into consideration.  Currently it uses parts
-      from the Johanson
+      This page computes an optimal impedance matching network for an
+      antenna.  It first calculates ideal values for inductor and
+      capacitor of all four L-⁠network options.  It then selects the
+      optimal real component values, taking tolerances into
+      consideration.  Currently it uses parts from the Johanson
       S402DS <a href="https://www.johansontechnology.com/capacitor-kits">Capacitor
       Kit</a> and the
       L402DC <a href="https://www.johansontechnology.com/inductor-kits">Inductor
-      Kit</a>.
-      Target impedance is 50Ω.
+      Kit</a>.  The optimization is done by maximizing worst-case (due
+      to tolerance combinations) transmitted power (∫|<em>S₁₁</em>|²) in the
+      selected frequency band.  Target impedance is 50Ω.
     </p>
+
+    <p>
+      Measure the <em>S₁₁</em> of your unmatched antenna using a vector
+      network analyzer (VNA).  Upload the resulting S-⁠Parameter file
+      here on this page.
+    </p>
+
+    <div class="grid">
+      <p>
+	When preparing the design for a potential matching network for
+	your antenna, place the matching network as close to the antenna
+	as possible.  I suggest preparing a π-⁠network, because it allows
+	for all L-⁠network combinations and does not require an
+	additional jumper link (which a T-⁠network would).
+      </p>
+      <figure style="max-width: 15em; margin: auto;">
+	{{ pi_network|safe }}
+	<figcaption>Suggested π matching network</figcaption>
+      </figure>
+    </div>
   </section>
+
+  <hr />
 
   <section>
     <header>
-      <h2>Upload S-Parameter File</h2>
+      <h2>Upload 1-⁠Port S-⁠Parameter File</h2>
     </header>
 
     {% with messages = get_flashed_messages() %}
@@ -46,7 +69,7 @@
       >
       <fieldset class="grid">
 	<label>
-	  Select an S-Parameter File
+	  Select a <code>.s1p</code> Touchstone file
 	  <input
 	    type="file"
 	    name="touchstone"

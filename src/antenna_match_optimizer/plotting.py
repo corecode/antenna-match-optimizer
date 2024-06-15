@@ -88,7 +88,7 @@ def plot_schematic(
             case mopt.Arch.CshuntLseries | mopt.Arch.LseriesCshunt:
                 make_cap(True).down()
 
-        elm.Ground()
+        elm.Ground(lead=False)
         d.pop()
 
         match config.arch:
