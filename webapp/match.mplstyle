@@ -6,6 +6,7 @@ patch.antialiased: True
 text.usetex: False
 #font.family: 'serif'
 font.size: 10
+svg.fonttype: none
 
 axes.facecolor: white
 axes.edgecolor: white

@@ -122,6 +122,12 @@ def plot_to_svg(fig: Figure) -> str:
     fig.savefig(buf, format="svg")
     str = buf.getvalue().decode("utf-8")
     str = re.sub(r'(<svg [^>]*?) width="[^"]+" height="[^"]+"', r"\1", str)
+    str = re.sub(r'(font: [^ ;]+) (?:[^;"]*)',
+                 r'\1 var(--pico-font-family-sans-serif)', str)
+    str = re.sub(r'(stroke|fill): #ffffff', r'\1: var(--pico-background-color)', str)
+    str = re.sub(r'(stroke|fill): #555555', r'\1: var(--pico-muted-color)', str)
+    str = re.sub(r'(stroke|fill): #eeeeee', r'\1: var(--pico-muted-border-color)', str)
+    str = re.sub(r'(stroke|fill): #000000', r'\1: var(--pico-color)', str)
     return str
 
 
@@ -168,6 +174,10 @@ def save_schematic(schema: schemdraw.Drawing) -> str:
     svg_str = schema.get_imagedata("svg").decode("utf-8")
     svg_str = re.sub('"sans"', '"sans-serif"', svg_str)
     svg_str = re.sub(r'(<svg [^>]*?) height="[^"]+" width="[^"]+"', r"\1", svg_str)
+    svg_str = re.sub(':black;', ':currentColor;', svg_str)
+    svg_str = re.sub('="black"', '="currentColor"', svg_str)
+    svg_str = re.sub('font-family="sans-serif"',
+                     "font-family=var(--pico-font-family-sans-serif)", svg_str)
 
     return svg_str
 
