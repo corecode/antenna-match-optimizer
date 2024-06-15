@@ -25,11 +25,7 @@ bp = Blueprint("match", __name__, url_prefix="/")
 
 
 @bp.route("/")
-def index():
-    return redirect(url_for(".upload"), code=HTTPStatus.PERMANENT_REDIRECT)
-
-
-@bp.route("/optimize", methods=["GET"])
+@bp.route("/", endpoint='index')
 def upload():
     pi_network = save_schematic(plot_pi_schematic())
     return render_template(
@@ -38,8 +34,10 @@ def upload():
     )
 
 
-@bp.route("/optimize", methods=["POST"])
+@bp.route("/optimize", methods=["GET", "POST"])
 def optimize():
+    if request.method != "POST":
+        return redirect(url_for(".upload"), code=HTTPStatus.SEE_OTHER)
     try:
         touchstone = request.files["touchstone"]
     except Exception:
