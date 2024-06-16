@@ -59,7 +59,7 @@ warn_unused_configs = true
 warn_unused_ignores = true
 
 [[tool.mypy.overrides]]
-module = "antenna_match_optimizer"
+module = "antenna_match_optimizer.*"
 disallow_untyped_defs = true
 
 [tool.isort]
