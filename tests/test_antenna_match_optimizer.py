@@ -154,7 +154,10 @@ def test_evaluate_components_is_sorted():
     configs = mopt.evaluate_components(args, *minima)
 
     for a, b in itertools.pairwise(configs):
-        assert np.sum(a.ntwk.max_s_mag.s_mag**2) < np.sum(b.ntwk.max_s_mag.s_mag**2)
+        asum = np.sum(a.ntwk.max_s_mag.s_mag**2)  # type: ignore
+        bsum = np.sum(b.ntwk.max_s_mag.s_mag**2)  # type: ignore
+        assert (a.arch, a.x) != (b.arch, b.x)
+        assert asum < bsum
 
     assert configs[0].arch == mopt.Arch.LshuntCseries
     assert configs[0].x == (4.7, 15.0)
@@ -167,7 +170,7 @@ def test_expand_result_single():
 
     result = mopt.expand_result(args, minima[0])
 
-    assert result.ntwk.frequency == detuned_ant.frequency
+    assert result.ntwk.frequency == detuned_ant.frequency  # type: ignore
     assert result.ntwk.name == minima[0].ntwk.name
 
 
@@ -179,7 +182,7 @@ def test_expand_result_set():
 
     result = mopt.expand_result(args, configs[0])
 
-    assert result.ntwk[0].frequency == detuned_ant.frequency
+    assert result.ntwk[0].frequency == detuned_ant.frequency  # type: ignore
     assert result.ntwk.name == configs[0].ntwk.name
     assert result.ntwk[0].name == configs[0].ntwk[0].name
     assert result.ntwk[0] != result.ntwk[1]

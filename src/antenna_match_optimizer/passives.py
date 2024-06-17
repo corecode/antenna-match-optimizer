@@ -1,10 +1,6 @@
-from typing import Annotated, Literal
-
 import numpy as np
-from numpy.typing import NDArray
 
-Toleranced = tuple[float, float]
-ComponentList = Annotated[NDArray[np.float_], Literal["N", 2]]
+from .typing import ComponentList
 
 INDUCTORS: ComponentList = np.array(
     [

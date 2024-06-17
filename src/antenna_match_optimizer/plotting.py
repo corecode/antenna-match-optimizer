@@ -1,40 +1,47 @@
 import math
+from typing import Any
 
 import matplotlib.pyplot as plt
 import matplotlib.style
 import schemdraw
 import schemdraw.elements as elm
-import skrf as rf
 from matplotlib.figure import Figure
 
-import antenna_match_optimizer as mopt
+from . import optimizer as mopt
+from .typing import Network, NetworkSet
 
 
-def plot_smith(ntwk: rf.Network, frequency: str) -> Figure:
+def plot_smith(ntwk: Network | NetworkSet, highlight: Network | NetworkSet) -> Figure:
     fig, ax = plt.subplots(figsize=(3.5, 2.5), layout="constrained")
-    ntwk.plot_s_smith(label=None, ax=ax)
+
+    ntwk.plot_s_smith(label=None, show_legend=False, ax=ax)
     ax.set_prop_cycle(matplotlib.rcParams["axes.prop_cycle"])
-    ntwk[frequency].plot_s_smith(linewidth=3, ax=ax)
+    highlight.plot_s_smith(linewidth=3, ax=ax)
+
     return fig
 
 
-def plot_vswr(ntwk: rf.Network, frequency: str | None) -> Figure:
+def plot_vswr(ntwk: Network | NetworkSet) -> Figure:
     fig, ax = plt.subplots(figsize=(3.5, 2.5), layout="constrained")
-    ntwk[frequency].plot_s_vswr(ax=ax)
+
+    ntwk.plot_s_vswr(ax=ax)
+
     ax.set_ylim(bottom=1.0)
     return fig
 
 
-def plot_with_tolerance(ntws: rf.NetworkSet, func: str = "s_vswr", **kwargs) -> None:
+def plot_with_tolerance(ntws: NetworkSet, func: str = "s_vswr", **kwargs: Any) -> None:
+    ax = kwargs.get("ax", plt.gca())
+
     plotting_method = getattr(ntws[0], f"plot_{func}")
     plotting_method(**kwargs)
-    ax = kwargs.get("ax", plt.gca())
+    color = ax.get_lines()[-1].get_color()
     ax.fill_between(
         ntws[0].frequency.f,
         getattr(ntws, f"min_{func}").s_re[:, 0, 0],
         getattr(ntws, f"max_{func}").s_re[:, 0, 0],
         alpha=0.3,
-        color=ax.get_lines()[-1].get_color(),
+        color=color,
     )
 
 
@@ -51,16 +58,16 @@ def pretty_value(value: float) -> str:
 
 
 def plot_schematic(
-    config: mopt.OptimizeResult, antenna_name: str = ""
+    config: mopt.OptimizeResult | mopt.OptimizeResultToleranced, antenna_name: str = ""
 ) -> schemdraw.Drawing:
     text_offsets = {False: (0, 0.2), True: (-0.1, -0.1)}
 
-    def make_ind(vertical=False):
+    def make_ind(vertical: bool = False) -> Any:
         return elm.Inductor2(loops=2).label(
             f"{pretty_value(config.x[0])}nH", ofst=text_offsets[vertical]
         )
 
-    def make_cap(vertical=False):
+    def make_cap(vertical: bool = False) -> Any:
         return elm.Capacitor().label(
             f"{pretty_value(config.x[1])}pF", ofst=text_offsets[vertical]
         )
