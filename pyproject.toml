@@ -20,9 +20,10 @@ license = {text = "AGPL3"}
 web = [
     "gunicorn>=22.0.0",
 ]
+
 [build-system]
-requires = ["setuptools>=61", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
 
 
 [tool.pdm]
@@ -39,6 +40,9 @@ dev = [
     "pytest-cov>=5.0.0",
     "pytest-profiling>=1.7.0",
 ]
+
+[tool.pdm.build]
+excludes = ["**/.ruff_cache"]
 
 [tool.pytest.ini_options]
 #addopts = "--cov=src/antenna_match_optimizer --cov-report=term-missing"
