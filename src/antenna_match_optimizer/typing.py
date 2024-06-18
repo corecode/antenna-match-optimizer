@@ -6,7 +6,6 @@ from typing import (
     Literal,
     Self,
     Tuple,
-    TypeVar,
 )
 
 import numpy as np
@@ -40,7 +39,9 @@ if TYPE_CHECKING:
         def plot_s_vswr(self, **kwargs: Any) -> None: ...
 
 else:
-    from skrf import Frequency, Network, NetworkSet
+    from skrf import Frequency as Frequency
+    from skrf import Network as Network
+    from skrf import NetworkSet as NetworkSet
 
 
 ArchParams = Tuple[float, float]

@@ -1,6 +1,6 @@
 import itertools
 
-import antenna_match_optimizer as mopt
+import antenna_match_optimizer.optimizer as mopt
 import numpy as np
 import skrf as rf
 from pytest import approx
@@ -154,8 +154,8 @@ def test_evaluate_components_is_sorted():
     configs = mopt.evaluate_components(args, *minima)
 
     for a, b in itertools.pairwise(configs):
-        asum = np.sum(a.ntwk.max_s_mag.s_mag**2)  # type: ignore
-        bsum = np.sum(b.ntwk.max_s_mag.s_mag**2)  # type: ignore
+        asum = np.sum(a.ntwk.max_s_mag.s_mag**2)
+        bsum = np.sum(b.ntwk.max_s_mag.s_mag**2)
         assert (a.arch, a.x) != (b.arch, b.x)
         assert asum < bsum
 
