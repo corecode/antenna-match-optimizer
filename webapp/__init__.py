@@ -18,6 +18,7 @@ def create_app() -> Flask:
 
     app = Flask(__name__)
     app.config["MAX_CONTENT_LENGTH"] = 16 * 1000 * 1000
+    app.config.from_prefixed_env()
     app.secret_key = secrets.token_hex(32)
 
     from . import match

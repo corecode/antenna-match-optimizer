@@ -1,6 +1,7 @@
 import io
 import itertools
 import re
+import threading
 from http import HTTPStatus
 from pathlib import PurePath
 
@@ -11,10 +12,12 @@ import numpy as np
 import schemdraw
 import schemdraw.elements as elm
 import skrf as rf
+import stopit
 from flask import (
     Blueprint,
     current_app,
     flash,
+    g,
     redirect,
     render_template,
     request,
@@ -23,6 +26,32 @@ from flask import (
 from matplotlib.figure import Figure
 
 bp = Blueprint("match", __name__, url_prefix="/")
+
+
+@bp.before_request
+def set_timeout():
+    timeout = float(current_app.config.get("TIMEOUT", 10))
+    handler_thread = threading.current_thread().ident
+    print(f"before request {timeout} {handler_thread}")
+
+    def send_signal():
+        print("timeout, sending signal")
+        stopit.async_raise(handler_thread, stopit.TimeoutException)
+
+    g.timeout_timer = threading.Timer(timeout, send_signal)
+    g.timeout_timer.start()
+
+
+@bp.after_request
+def stop_timeout(resp):
+    g.timeout_timer.cancel()
+    return resp
+
+
+@bp.errorhandler(stopit.TimeoutException)
+def timeouterror(error):
+    flash("Optimizing this file and frequency range took too long")
+    return redirect(request.url, code=HTTPStatus.SEE_OTHER)
 
 
 @bp.route("/")
