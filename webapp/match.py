@@ -90,6 +90,12 @@ def optimize():
         flash("Could not parse Touchstone file")
         return redirect(request.url, code=HTTPStatus.SEE_OTHER)
 
+    if base.number_of_ports != 1:
+        flash(
+            f"Touchstone file is not a 1-port file: found {base.number_of_ports} ports"
+        )
+        return redirect(request.url, code=HTTPStatus.SEE_OTHER)
+
     frequency = request.form.get("frequency")
     if frequency is None or frequency == "":
         flash("You need to specify a frequency range")

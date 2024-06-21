@@ -24,6 +24,9 @@ class OptimizerArgs:
     frequency: str | None
 
     def __init__(self, ntwk: Network, frequency: str | None = None):
+        if ntwk.number_of_ports != 1:
+            raise ValueError("network must be 1-port")
+
         self.ntwk = ntwk
         self.frequency = frequency
         if self.frequency:

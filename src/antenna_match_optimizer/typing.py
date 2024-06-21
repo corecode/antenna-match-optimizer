@@ -21,6 +21,7 @@ if TYPE_CHECKING:
         params: dict[Any, Any]
         frequency: Frequency
         s_mag: NDArray[np.float_]
+        number_of_ports: int
 
         def __getitem__(self, *args: Any) -> Self: ...
         def __pow__(self, args: Any) -> Self: ...

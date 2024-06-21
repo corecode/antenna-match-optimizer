@@ -3,6 +3,7 @@ import itertools
 import antenna_match_optimizer.optimizer as mopt
 import numpy as np
 import skrf as rf
+import pytest
 from pytest import approx
 
 
@@ -18,6 +19,12 @@ def make_detuned_antenna() -> rf.Network:
     )
     ant_detune.name = "ANT"
     return ant_detune
+
+
+def test_optimize_args_rejects_non_1port():
+    twoport = rf.DefinedGammaZ0().line(1)
+    with pytest.raises(ValueError):
+        mopt.OptimizerArgs(ntwk=twoport, frequency="2.4-2.4835GHz")
 
 
 def test_optimize_returns_all_archs():
