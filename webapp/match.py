@@ -101,12 +101,22 @@ def optimize():
         flash("You need to specify a frequency range")
         return redirect(request.url, code=HTTPStatus.SEE_OTHER)
 
+    optimize_messages: list[str] = []
+
     try:
-        args = mopt.OptimizerArgs(ntwk=base, frequency=frequency)
+        max_points = current_app.config.get("MAX_FREQ_POINTS", 51)
+        args = mopt.OptimizerArgs(ntwk=base, frequency=frequency, max_points=max_points)
     except Exception as e:
         current_app.logger.error(e)
         flash("Frequency range is invalid")
         return redirect(request.url, code=HTTPStatus.SEE_OTHER)
+
+    if len(args.bandlimited_ntwk.frequency) != len(args.ntwk.frequency[args.frequency]):
+        optimize_messages.append(
+            f"Frequency points in optimization reduced from \
+            {len(args.ntwk.frequency[args.frequency])} to \
+            {len(args.bandlimited_ntwk.frequency)}"
+        )
 
     ideal = mopt.optimize(args)
     results = mopt.evaluate_components(args, *ideal)
@@ -143,6 +153,7 @@ def optimize():
 
     return render_template(
         "optimize.html",
+        optimize_messages=optimize_messages,
         base_name=base.name,
         frequency=frequency,
         base_smith=base_smith,

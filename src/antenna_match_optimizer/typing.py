@@ -15,6 +15,15 @@ if TYPE_CHECKING:
 
     class Frequency:
         f: NDArray[np.float_]
+        npoints: int
+        start: float
+        start_scaled: float
+        stop: float
+        stop_scaled: float
+        unit: str
+
+        def __len__(self) -> int: ...
+        def __getitem__(self, *args: Any) -> Self: ...
 
     class Network:
         name: str

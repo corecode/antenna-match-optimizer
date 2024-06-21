@@ -23,14 +23,24 @@ class OptimizerArgs:
     bandlimited_ntwk: Network
     frequency: str | None
 
-    def __init__(self, ntwk: Network, frequency: str | None = None):
+    def __init__(
+        self, ntwk: Network, frequency: str | None = None, max_points: int | None = None
+    ):
         if ntwk.number_of_ports != 1:
             raise ValueError("network must be 1-port")
 
         self.ntwk = ntwk
         self.frequency = frequency
         if self.frequency:
-            self.bandlimited_ntwk = self.ntwk[self.frequency]
+            freq_subset = self.ntwk.frequency[self.frequency]
+            if max_points is not None and freq_subset.npoints > max_points:
+                freq_subset = rf.Frequency(
+                    freq_subset.start_scaled,
+                    freq_subset.stop_scaled,
+                    max_points,
+                    unit=freq_subset.unit,
+                )
+            self.bandlimited_ntwk = self.ntwk[freq_subset]
         else:
             self.bandlimited_ntwk = self.ntwk
 

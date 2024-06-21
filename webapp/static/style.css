@@ -3,6 +3,11 @@
     color: color:var(--pico-color-dark);
 }
 
+.notice {
+    background-color: rgb(255, 191, 0);
+    color: color:var(--pico-color-dark);
+}
+
 .container > figure, .grid > figure {
     text-align: center;
 }

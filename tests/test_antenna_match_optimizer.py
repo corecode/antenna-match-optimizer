@@ -27,6 +27,16 @@ def test_optimize_args_rejects_non_1port():
         mopt.OptimizerArgs(ntwk=twoport, frequency="2.4-2.4835GHz")
 
 
+def test_optimize_args_with_npoints():
+    t_points = 21
+    freq = rf.Frequency(2, 3, 1001, unit="GHz")
+    ntwk = rf.DefinedGammaZ0(freq).match()
+
+    args = mopt.OptimizerArgs(ntwk=ntwk, frequency="2.4-2.5GHz", max_points=t_points)
+
+    assert args.bandlimited_ntwk.frequency.npoints == t_points
+
+
 def test_optimize_returns_all_archs():
     detuned_ant = make_detuned_antenna()
 

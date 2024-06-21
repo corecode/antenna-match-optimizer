@@ -20,6 +20,19 @@
       <a href="{{ url_for('.upload') }}" role="button" class="secondary">Start Over</a>
     </div>
   </div>
+
+  {% with messages = optimize_messages %}
+    {% if messages %}
+      <article>
+	<header class="notice">Optimization Notice</header>
+	<ul>
+	  {% for message in messages %}
+	    <li>{{ message }}</li>
+	  {% endfor %}
+	</ul>
+      </article>
+    {% endif %}
+  {% endwith %}
 {% endblock %}
 
 {% block content %}
