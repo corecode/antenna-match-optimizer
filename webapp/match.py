@@ -68,6 +68,7 @@ def upload():
 def optimize():
     if request.method != "POST":
         return redirect(url_for(".upload"), code=HTTPStatus.SEE_OTHER)
+
     try:
         touchstone = request.files["touchstone"]
     except Exception:
