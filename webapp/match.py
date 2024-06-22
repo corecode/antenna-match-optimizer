@@ -3,7 +3,7 @@ import itertools
 import re
 import threading
 from http import HTTPStatus
-from pathlib import PurePath
+from pathlib import Path, PurePath
 
 import antenna_match_optimizer as mopt
 import antenna_match_optimizer.plotting as mplt
@@ -29,6 +29,8 @@ from matplotlib.figure import Figure
 class OptimizeError(Exception):
     pass
 
+
+example_cache = None
 
 bp = Blueprint("match", __name__, url_prefix="/")
 
@@ -67,6 +69,19 @@ def upload():
         "upload.html",
         pi_network=pi_network,
     )
+
+
+@bp.route("/example")
+def example():
+    global example_cache
+    if example_cache is None:
+        example_cache = optimize_internal(
+            str(Path(__file__).with_name("example.s1p")),
+            "Example Antenna",
+            "2.4-2.5GHz",
+            max_points=51,
+        )
+    return render_template("optimize.html", **example_cache)
 
 
 @bp.route("/optimize", methods=["GET", "POST"])
