@@ -25,6 +25,11 @@ from flask import (
 )
 from matplotlib.figure import Figure
 
+
+class OptimizeError(Exception):
+    pass
+
+
 bp = Blueprint("match", __name__, url_prefix="/")
 
 
@@ -73,43 +78,56 @@ def optimize():
         touchstone = request.files["touchstone"]
     except Exception:
         flash("No Touchstone file uploaded")
-        return redirect(request.url, code=HTTPStatus.SEE_OTHER)
+        return redirect(url_for(".upload"), code=HTTPStatus.SEE_OTHER)
 
     touchstone_name = PurePath(touchstone.filename or "Noname")
     touchstone_data = touchstone.read().decode("utf-8")
     touchstone_io = io.StringIO(touchstone_data)
     touchstone_io.name = touchstone_name.name
 
-    try:
-        base = rf.Network(
-            file=touchstone_io,
-            name=touchstone_name.stem,
-            f_unit="GHz",
-        )
-    except Exception:
-        flash("Could not parse Touchstone file")
-        return redirect(request.url, code=HTTPStatus.SEE_OTHER)
-
-    if base.number_of_ports != 1:
-        flash(
-            f"Touchstone file is not a 1-port file: found {base.number_of_ports} ports"
-        )
-        return redirect(request.url, code=HTTPStatus.SEE_OTHER)
-
     frequency = request.form.get("frequency")
     if frequency is None or frequency == "":
         flash("You need to specify a frequency range")
-        return redirect(request.url, code=HTTPStatus.SEE_OTHER)
+        return redirect(url_for(".upload"), code=HTTPStatus.SEE_OTHER)
 
+    try:
+        template_args = optimize_internal(
+            touchstone_io,
+            touchstone_name.stem,
+            frequency,
+            max_points=current_app.config.get("MAX_FREQ_POINTS", 51),
+        )
+        return render_template("optimize.html", **template_args)
+
+    except OptimizeError as e:
+        current_app.logger.error(e.__cause__)
+        flash(str(e))
+        return redirect(url_for(".upload"), code=HTTPStatus.SEE_OTHER)
+
+
+def optimize_internal(
+    touchstone_io: str | io.StringIO, name: str, frequency: str, max_points: int
+):
     optimize_messages: list[str] = []
 
     try:
-        max_points = current_app.config.get("MAX_FREQ_POINTS", 51)
+        base = rf.Network(
+            file=touchstone_io,
+            name=name,
+            f_unit="GHz",
+        )
+    except Exception as e:
+        raise OptimizeError("Could not parse Touchstone file") from e
+
+    if base.number_of_ports != 1:
+        raise OptimizeError(
+            f"Touchstone file is not a 1-port file: found {base.number_of_ports} ports"
+        )
+
+    try:
         args = mopt.OptimizerArgs(ntwk=base, frequency=frequency, max_points=max_points)
     except Exception as e:
-        current_app.logger.error(e)
-        flash("Frequency range is invalid")
-        return redirect(request.url, code=HTTPStatus.SEE_OTHER)
+        raise OptimizeError("Frequency range is invalid") from e
 
     if len(args.bandlimited_ntwk.frequency) != len(args.ntwk.frequency[args.frequency]):
         optimize_messages.append(
@@ -151,19 +169,18 @@ def optimize():
 
     plt.close("all")
 
-    return render_template(
-        "optimize.html",
-        optimize_messages=optimize_messages,
-        base_name=base.name,
-        frequency=frequency,
-        base_smith=base_smith,
-        base_vswr=base_vswr,
-        best_name=best_narrow.ntwk[0].name,
-        best_smith=best_smith,
-        best_vswr=best_vswr,
-        best_schema=best_schema,
-        results_vswr=results_vswr,
-    )
+    return {
+        "optimize_messages": optimize_messages,
+        "base_name": base.name,
+        "frequency": frequency,
+        "base_smith": base_smith,
+        "base_vswr": base_vswr,
+        "best_name": best_narrow.ntwk[0].name,
+        "best_smith": best_smith,
+        "best_vswr": best_vswr,
+        "best_schema": best_schema,
+        "results_vswr": results_vswr,
+    }
 
 
 def plot_to_svg(fig: Figure) -> str:
