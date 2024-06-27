@@ -18,6 +18,16 @@
     justify-content: space-between;
 }
 
+label:has([type=checkbox], [type=radio]) {
+    display: flex;
+    align-items: center;
+}
+
+label > :where([type=checkbox], [type=radio]) {
+    flex: none;
+    margin-bottom: -0.125em;
+}
+
 .logo {
     height: 1.2em;
     margin-right: 0.5em;
@@ -63,6 +73,16 @@
 
     body > header {
 	padding-block: 0;
+    }
+
+    body article {
+	background: none;
+	box-shadow: none;
+	border: 1pt solid;
+    }
+
+    body :is(.notice, .error) {
+	background: none;
     }
 
     body .noprint {

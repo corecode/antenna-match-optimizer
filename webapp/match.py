@@ -1,6 +1,7 @@
 import io
 import itertools
 import re
+import tempfile
 import threading
 from http import HTTPStatus
 from pathlib import Path, PurePath
@@ -21,9 +22,11 @@ from flask import (
     redirect,
     render_template,
     request,
+    send_from_directory,
     url_for,
 )
 from matplotlib.figure import Figure
+from werkzeug.utils import secure_filename
 
 
 class OptimizeError(Exception):
@@ -65,9 +68,14 @@ def timeouterror(error):
 @bp.route("/", endpoint="index")
 def upload():
     pi_network = save_schematic(plot_pi_schematic())
+    share_dir = current_app.config.get("SHARE_DIR", None)
+    sharing_enabled = (
+        share_dir is not None and (Path(current_app.root_path) / share_dir).is_dir()
+    )
     return render_template(
         "upload.html",
         pi_network=pi_network,
+        sharing_enabled=sharing_enabled,
     )
 
 
@@ -112,12 +120,49 @@ def optimize():
             frequency,
             max_points=current_app.config.get("MAX_FREQ_POINTS", 51),
         )
-        return render_template("optimize.html", **template_args)
-
     except OptimizeError as e:
         current_app.logger.error(e.__cause__)
         flash(str(e))
         return redirect(url_for(".upload"), code=HTTPStatus.SEE_OTHER)
+
+    response = render_template("optimize.html", **template_args)
+
+    if request.form.get("share", False):
+        return store_and_redirect(touchstone_name.stem, frequency, response)
+    else:
+        return response
+
+
+def store_and_redirect(name: str, frequency: str, response: str):
+    try:
+        share_dir = Path(current_app.root_path) / current_app.config["SHARE_DIR"]
+        base_name = f"{name}-{frequency}"
+        clean_prefix = secure_filename(base_name)
+
+        for serial in range(1, 9999999):
+            final_name = f"{clean_prefix}-{serial}"
+            try:
+                with open(share_dir / final_name, mode="xt") as f:
+                    f.write(response)
+                return redirect(
+                    url_for(".share", name=final_name),
+                    code=HTTPStatus.SEE_OTHER,
+                )
+            except FileExistsError:
+                pass
+        raise RuntimeError(f"could not generate unique filename for {base_name}")
+    except Exception as e:
+        current_app.logger.error(e)
+        return response  # silent fallback
+
+
+@bp.route("/share/<name>")
+def share(name: str):
+    return send_from_directory(
+        directory=current_app.config["SHARE_DIR"],
+        path=name,
+        mimetype="text/html",
+    )
 
 
 def optimize_internal(

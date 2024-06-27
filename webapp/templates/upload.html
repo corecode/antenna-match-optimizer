@@ -96,6 +96,15 @@
 	  </datalist>
 	  <small>Frequency range example: <code>2.4-2.5GHz</code></small>
 	</label>
+	{% if sharing_enabled %}
+	  <label>
+	    <input
+	      type="checkbox"
+	      name="share"
+	      />
+	      Store report on server to allow sharing
+	  </label>
+	{% endif %}
       </fieldset>
       <input
 	type="submit"
