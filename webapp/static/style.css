@@ -1,11 +1,11 @@
 .error {
     background-color: rgb(245, 183, 168);
-    color: color:var(--pico-color-dark);
+    color: #000;
 }
 
 .notice {
     background-color: rgb(255, 191, 0);
-    color: color:var(--pico-color-dark);
+    color: #000;
 }
 
 .container > figure, .grid > figure {
