@@ -18,6 +18,10 @@
     justify-content: space-between;
 }
 
+.nowrap {
+    white-space: nowrap;
+}
+
 label:has([type=checkbox], [type=radio]) {
     display: flex;
     align-items: center;
@@ -69,6 +73,10 @@ label > :where([type=checkbox], [type=radio]) {
 
     figure {
 	break-inside: avoid;
+    }
+
+    body svg {
+	max-height: 6cm;
     }
 
     body > header {

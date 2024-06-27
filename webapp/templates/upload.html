@@ -91,21 +91,35 @@
 	    placeholder="Select or enter frequency range"
 	    required
 	    />
+	  <small>Frequency range example: <code>2.4-2.5GHz</code></small>
 	  <datalist id="frequency-options">
 	    <option selected value="2.401-2.481GHz">Bluetooth Low Energy</option>
 	  </datalist>
-	  <small>Frequency range example: <code>2.4-2.5GHz</code></small>
 	</label>
-	{% if sharing_enabled %}
+      </fieldset>
+      <fieldset>
+	<label>
+	  Add a title for this dataset
+	  <input
+	    type="text"
+	    name="title"
+	    placeholder="Title for Dataset"
+	    />
+	  <small>This title shows up in the report so that you can
+	  better identify your dataset</small>
+	</label>
+      </fieldset>
+      {% if sharing_enabled %}
+	<fieldset>
 	  <label>
 	    <input
 	      type="checkbox"
 	      name="share"
 	      />
-	      Store report on server to allow sharing
+	    Store report on server to allow sharing
 	  </label>
-	{% endif %}
-      </fieldset>
+	</fieldset>
+      {% endif %}
       <input
 	type="submit"
 	value="Upload and Compute"

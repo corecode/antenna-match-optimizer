@@ -115,9 +115,10 @@ def optimize():
 
     try:
         template_args = optimize_internal(
-            touchstone_io,
-            touchstone_name.stem,
-            frequency,
+            touchstone_io=touchstone_io,
+            name=touchstone_name.stem,
+            frequency=frequency,
+            title=request.form.get("title", None),
             max_points=current_app.config.get("MAX_FREQ_POINTS", 51),
         )
     except OptimizeError as e:
@@ -166,7 +167,11 @@ def share(name: str):
 
 
 def optimize_internal(
-    touchstone_io: str | io.StringIO, name: str, frequency: str, max_points: int
+    touchstone_io: str | io.StringIO,
+    name: str,
+    frequency: str,
+    title: str | None,
+    max_points: int,
 ):
     optimize_messages: list[str] = []
 
@@ -233,6 +238,7 @@ def optimize_internal(
         "optimize_messages": optimize_messages,
         "base_name": base.name,
         "frequency": frequency,
+        "title": title or base.name,
         "base_smith": base_smith,
         "base_vswr": base_vswr,
         "best_name": best_narrow.ntwk[0].name,
