@@ -2,8 +2,8 @@ import itertools
 
 import antenna_match_optimizer.optimizer as mopt
 import numpy as np
-import skrf as rf
 import pytest
+import skrf as rf
 from pytest import approx
 
 

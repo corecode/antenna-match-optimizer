@@ -1,7 +1,6 @@
 import io
 import itertools
 import re
-import tempfile
 import threading
 from http import HTTPStatus
 from pathlib import Path, PurePath
@@ -84,9 +83,10 @@ def example():
     global example_cache
     if example_cache is None:
         example_cache = optimize_internal(
-            str(Path(__file__).with_name("example.s1p")),
-            "Example Antenna",
-            "2.4-2.5GHz",
+            touchstone_io=str(Path(__file__).with_name("example.s1p")),
+            name="Example Antenna",
+            frequency="2.4-2.5GHz",
+            title=None,
             max_points=51,
         )
     return render_template("optimize.html", **example_cache)
