@@ -185,9 +185,10 @@ def optimize_internal(
         raise OptimizeError("Could not parse Touchstone file") from e
 
     if base.number_of_ports != 1:
-        raise OptimizeError(
-            f"Touchstone file is not a 1-port file: found {base.number_of_ports} ports"
+        optimize_messages.append(
+            f"Touchstone file has {base.number_of_ports} ports - using S11 for analysis"
         )
+        base = base.s11
 
     try:
         args = mopt.OptimizerArgs(ntwk=base, frequency=frequency, max_points=max_points)
