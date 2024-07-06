@@ -174,11 +174,12 @@ def optimize_internal(
     max_points: int,
 ):
     optimize_messages: list[str] = []
+    title = title or name
 
     try:
         base = rf.Network(
             file=touchstone_io,
-            name=name,
+            name=title,
             f_unit="GHz",
         )
     except Exception as e:
@@ -223,9 +224,7 @@ def optimize_internal(
     ax.set_ylim(bottom=1.0, top=worst_vswr)
     best_vswr = plot_to_svg(best_vswr_fig)
 
-    best_schema = save_schematic(
-        mplt.plot_schematic(best_narrow, antenna_name=base.name)
-    )
+    best_schema = save_schematic(mplt.plot_schematic(best_narrow, antenna_name=title))
 
     results_vswr = plot_architectures(
         sorted(results, key=lambda r: r.arch.value),
@@ -239,7 +238,7 @@ def optimize_internal(
         "optimize_messages": optimize_messages,
         "base_name": base.name,
         "frequency": frequency,
-        "title": title or base.name,
+        "title": title,
         "base_smith": base_smith,
         "base_vswr": base_vswr,
         "best_name": best_narrow.ntwk[0].name,
