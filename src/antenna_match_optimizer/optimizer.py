@@ -12,6 +12,10 @@ from .typing import ArchParams, ComponentList, Network, NetworkSet, Toleranced
 
 
 class Arch(Enum):
+    Lshunt = auto()
+    Cshunt = auto()
+    Lseries = auto()
+    Cseries = auto()
     LshuntCseries = auto()
     CshuntLseries = auto()
     LseriesCshunt = auto()
@@ -83,6 +87,26 @@ def matching_network(arch: Arch, x: ArchParams, ntwk: Network) -> Network:
         return n
 
     match arch:
+        case Arch.Lshunt:
+            return named(
+                f"{Lstr}|",
+                line.shunt_inductor(L),
+            )
+        case Arch.Cshunt:
+            return named(
+                f"{Cstr}|",
+                line.shunt_capacitor(C),
+            )
+        case Arch.Lseries:
+            return named(
+                f"{Lstr}―",
+                line.inductor(L),
+            )
+        case Arch.Cseries:
+            return named(
+                f"{Cstr}―",
+                line.capacitor(C),
+            )
         case Arch.LshuntCseries:
             return named(
                 f"{Lstr}|{Cstr}―",
@@ -117,8 +141,8 @@ def optimize(args: OptimizerArgs) -> list[OptimizeResult]:
         (np.max(passives.CAPACITORS[:, 0]) * np.min(passives.CAPACITORS[:, 0])) ** 0.5,
     )
     bounds = (
-        (1e-3, 2 * np.max(passives.INDUCTORS[:, 0])),
-        (1e-3, 2 * np.max(passives.CAPACITORS[:, 0])),
+        (np.min(passives.INDUCTORS[:, 0]), np.max(passives.INDUCTORS[:, 0])),
+        (np.min(passives.CAPACITORS[:, 0]), np.max(passives.CAPACITORS[:, 0])),
     )
 
     def optimize_arch(arch: Arch) -> OptimizeResult:
@@ -176,11 +200,21 @@ def component_combinations(
 ) -> Iterator[tuple[Tag, ArchParams]]:
     l_comps = closest_values(x[0], inductors)
     c_comps = closest_values(x[1], capacitors)
-    for l_comp, c_comp in itertools.product(l_comps, c_comps):
-        l_tols = expand_tolerance(l_comp)
-        c_tols = expand_tolerance(c_comp)
-        for l_val, c_val in itertools.product(l_tols, c_tols):
-            yield (arch, (l_comp[0], c_comp[0])), (l_val, c_val)
+    match arch:
+        case Arch.Lseries | Arch.Lshunt:
+            for l_comp in l_comps:
+                for l_val in expand_tolerance(l_comp):
+                    yield (arch, (l_comp[0], np.NaN)), (l_val, np.NaN)
+        case Arch.Cseries | Arch.Cshunt:
+            for c_comp in c_comps:
+                for c_val in expand_tolerance(c_comp):
+                    yield (arch, (np.NaN, c_comp[0])), (np.NaN, c_val)
+        case _:
+            for l_comp, c_comp in itertools.product(l_comps, c_comps):
+                l_tols = expand_tolerance(l_comp)
+                c_tols = expand_tolerance(c_comp)
+                for l_val, c_val in itertools.product(l_tols, c_tols):
+                    yield (arch, (l_comp[0], c_comp[0])), (l_val, c_val)
 
 
 def evaluate_components(

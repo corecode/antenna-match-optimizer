@@ -57,7 +57,7 @@ def pretty_value(value: float) -> str:
     return val_str
 
 
-def plot_schematic(
+def plot_schematic(  # noqa: C901
     config: mopt.OptimizeResult | mopt.OptimizeResultToleranced, antenna_name: str = ""
 ) -> schemdraw.Drawing:
     text_offsets = {False: (0, 0.2), True: (-0.1, -0.1)}
@@ -72,39 +72,47 @@ def plot_schematic(
             f"{pretty_value(config.x[1])}pF", ofst=text_offsets[vertical]
         )
 
+    def make_shunt(vertical: bool = False) -> Any:
+        elm.Dot()
+        d.push()
+        shunt(True).down()
+        elm.Ground(lead=False)
+        d.pop()
+
+    first_series = second_series = lambda: elm.Line()
+    center = make_shunt
+    match config.arch:
+        case mopt.Arch.Cseries:
+            center = make_cap
+            first_series = second_series = lambda: elm.Line(unit=1)
+        case mopt.Arch.Lseries:
+            center = make_ind
+            first_series = second_series = lambda: elm.Line(unit=1)
+        case mopt.Arch.Cshunt:
+            shunt = make_cap
+        case mopt.Arch.Lshunt:
+            shunt = make_ind
+        case mopt.Arch.CseriesLshunt:
+            first_series = make_cap
+            shunt = make_ind
+        case mopt.Arch.LseriesCshunt:
+            first_series = make_ind
+            shunt = make_cap
+        case mopt.Arch.LshuntCseries:
+            shunt = make_ind
+            second_series = make_cap
+        case mopt.Arch.CshuntLseries:
+            shunt = make_cap
+            second_series = make_ind
+
     d: schemdraw.Drawing
     with schemdraw.Drawing(show=False) as d:
         d.config(unit=2)
 
         elm.Tag().left()
-
-        match config.arch:
-            case mopt.Arch.CseriesLshunt:
-                make_cap()
-            case mopt.Arch.LseriesCshunt:
-                make_ind()
-            case _:
-                elm.Line()
-
-        elm.Dot()
-        d.push()
-
-        match config.arch:
-            case mopt.Arch.LshuntCseries | mopt.Arch.CseriesLshunt:
-                make_ind(True).down()
-            case mopt.Arch.CshuntLseries | mopt.Arch.LseriesCshunt:
-                make_cap(True).down()
-
-        elm.Ground(lead=False)
-        d.pop()
-
-        match config.arch:
-            case mopt.Arch.LshuntCseries:
-                make_cap()
-            case mopt.Arch.CshuntLseries:
-                make_ind()
-            case _:
-                elm.Line()
+        first_series()
+        center()
+        second_series()
 
         elm.Antenna().label(antenna_name, ofst=text_offsets[False])
 

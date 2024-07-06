@@ -43,21 +43,33 @@ def test_optimize_returns_all_archs():
     args = mopt.OptimizerArgs(ntwk=detuned_ant, frequency="2.4-2.4835GHz")
     optimized = mopt.optimize(args)
 
-    assert optimized[0].arch == mopt.Arch.LshuntCseries
-    assert optimized[0].x[0] == approx(4.442, rel=1e-3)
-    assert optimized[0].x[1] == approx(12.24, rel=1e-3)
+    assert optimized[0].arch == mopt.Arch.Lshunt
+    assert optimized[0].x[0] == approx(4.915, rel=1e-3)
 
-    assert optimized[1].arch == mopt.Arch.CshuntLseries
-    assert optimized[1].x[0] == approx(2.773, rel=1e-3)
-    assert optimized[1].x[1] == approx(0.9583, rel=1e-3)
+    assert optimized[1].arch == mopt.Arch.Cshunt
+    assert optimized[1].x[1] == approx(0.2, rel=1e-3)
 
-    assert optimized[2].arch == mopt.Arch.LseriesCshunt
-    assert optimized[2].x[0] == approx(1.219, rel=1e-3)
-    assert optimized[2].x[1] == approx(1e-3, rel=1e-3)
+    assert optimized[2].arch == mopt.Arch.Lseries
+    assert optimized[2].x[0] == approx(1.218, rel=1e-3)
 
-    assert optimized[3].arch == mopt.Arch.CseriesLshunt
-    assert optimized[3].x[0] == approx(4.761, rel=1e-3)
-    assert optimized[3].x[1] == approx(60, rel=1e-3)
+    assert optimized[3].arch == mopt.Arch.Cseries
+    assert optimized[3].x[1] == approx(30.0, rel=1e-3)
+
+    assert optimized[4].arch == mopt.Arch.LshuntCseries
+    assert optimized[4].x[0] == approx(4.442, rel=1e-3)
+    assert optimized[4].x[1] == approx(12.24, rel=1e-3)
+
+    assert optimized[5].arch == mopt.Arch.CshuntLseries
+    assert optimized[5].x[0] == approx(2.774, rel=1e-3)
+    assert optimized[5].x[1] == approx(0.9583, rel=1e-3)
+
+    assert optimized[6].arch == mopt.Arch.LseriesCshunt
+    assert optimized[6].x[0] == approx(1.326, rel=1e-3)
+    assert optimized[6].x[1] == approx(0.2, rel=1e-3)
+
+    assert optimized[7].arch == mopt.Arch.CseriesLshunt
+    assert optimized[7].x[0] == approx(4.613, rel=1e-3)
+    assert optimized[7].x[1] == approx(30, rel=1e-3)
 
 
 def test_optimize_creates_correct_name():
@@ -66,8 +78,8 @@ def test_optimize_creates_correct_name():
     args = mopt.OptimizerArgs(ntwk=detuned_ant, frequency="2.4-2.4835GHz")
     optimized = mopt.optimize(args)
 
-    assert "4.44nH" in optimized[0].ntwk.name
-    assert "12.2pF" in optimized[0].ntwk.name
+    assert "4.44nH" in optimized[4].ntwk.name
+    assert "12.2pF" in optimized[4].ntwk.name
 
 
 def test_closest_values_exact():
@@ -161,7 +173,7 @@ def test_evaluate_components_unlimited():
 
     result = mopt.evaluate_components(args, *optimized)
 
-    assert len(result) == 15
+    assert len(result) == 21
 
 
 def test_evaluate_components_is_sorted():
