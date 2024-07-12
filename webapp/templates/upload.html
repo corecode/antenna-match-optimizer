@@ -16,14 +16,16 @@
       Kit</a> and the
       L402DC <a href="https://www.johansontechnology.com/inductor-kits">Inductor
       Kit</a>.  The optimization is done by maximizing worst-case (due
-      to tolerance combinations) transmitted power (∫|<em>S₁₁</em>|²) in the
+      to tolerance combinations) transmitted power (∫|<i>S₁₁</i>|²) in the
       selected frequency band.  Target impedance is 50Ω.
     </p>
 
     <p>
-      Measure the <em>S₁₁</em> of your unmatched antenna using a vector
-      network analyzer (VNA).  Upload the resulting S-⁠Parameter file
-      here on this page.
+      Measure the <i>S₁₁</i> of your unmatched antenna using a
+      vector network analyzer (VNA).  Use the port extension feature
+      of your VNA to move the measurement plane to the location of
+      your matching network (indicated as <i>Z<sub>ant</sub></i>).
+      Upload the resulting S-⁠Parameter file here on this page.
     </p>
 
     <div class="grid">
@@ -36,7 +38,7 @@
       </p>
       <figure style="max-width: 15em; margin: auto;">
 	{{ pi_network|safe }}
-	<figcaption>Suggested π matching network</figcaption>
+	<figcaption>Suggested π matching network and measurement plane</figcaption>
       </figure>
     </div>
   </section>
